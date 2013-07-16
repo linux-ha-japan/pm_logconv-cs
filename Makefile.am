@@ -1,6 +1,6 @@
 logconv_NAME = pm_logconv
 logconv_SCRIPTS = $(logconv_NAME).py
-logconv_CONFIG = $(logconv_NAME).conf
+logconv_CONFIG = $(logconv_NAME).conf.sample
 
 MAINTAINERCLEANFILES = Makefile.in
 logconvdir = @HA_NOARCHDATAHBDIR@/$(logconv_NAME)

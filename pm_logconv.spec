@@ -87,6 +87,6 @@ true
 ########################################
 %defattr(-,root,root)
 %dir /etc
-%config /etc/pm_logconv.conf
+%config /etc/pm_logconv.conf.sample
 %dir %{prefix}/share/pacemaker/%{instdir}
 %{prefix}/share/pacemaker/%{instdir}/pm_logconv.py
