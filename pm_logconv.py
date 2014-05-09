@@ -2364,8 +2364,8 @@ class LogConvertFuncs:
 		}
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid, op = self.parse_opid(wordlist[3])[:2]
-			rcstr = self.trimmark(wordlist[5],"=")
+			rscid, op = self.parse_opid(wordlist[2])[:2]
+			rcstr = self.trimmark(wordlist[6],"=")
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, op, rcstr):
@@ -2425,8 +2425,8 @@ class LogConvertFuncs:
 	def operation_failed(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid, op = self.parse_opid(wordlist[3])[:2]
-			rcstr = self.trimmark(wordlist[5],"=")
+			rscid, op = self.parse_opid(wordlist[2])[:2]
+			rcstr = self.trimmark(wordlist[7],"=")
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, op, rcstr):
@@ -2463,7 +2463,7 @@ class LogConvertFuncs:
 	'''
 	def operation_timedout_ocf(self, outputobj, logelm, lconvfrm):
 		try:
-			opid = logelm.halogmsg.split()[3]
+			opid = logelm.halogmsg.split()[2]
 			rscid, op = self.parse_opid(opid)[:2]
 		except:
 			return CONV_PARSE_ERROR
@@ -2491,8 +2491,8 @@ class LogConvertFuncs:
 	def detect_rsc_failure(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid = self.parse_opid(wordlist[3])[0]
-			rcstr = self.trimmark(wordlist[5],"=")
+			rscid = self.parse_opid(wordlist[2])[0]
+			rcstr = self.trimmark(wordlist[7],"=")
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, rcstr):
