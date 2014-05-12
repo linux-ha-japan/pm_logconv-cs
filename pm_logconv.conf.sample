@@ -279,13 +279,13 @@ fotrigger=3
 ###
 #MsgNo.22-1
 [Detect attribute updated]
-pattern=attrd,notice:,attrd_perform_update:,Sent update,!fail-count-,!last-failure-,!probe_complete,!shutdown,!master-
+pattern=attrd,info:,attrd_peer_update:,Setting,!-> \(null\),!fail-count-,!last-failure-,!probe_complete,!shutdown,!master-
 func=detect_attr_updated
 loglevel=info
 
 #MsgNo.22-2
 [Detect attribute deleted]
-pattern=attrd,notice:,attrd_perform_update:,Sent delete,!delete -,!fail-count-,!last-failure-,!probe_complete,!shutdown,!master-
+pattern=attrd,info:,attrd_peer_update:,Setting,-> \(null\),!fail-count-,!last-failure-,!probe_complete,!shutdown,!master-
 func=detect_attr_deleted
 loglevel=info
 

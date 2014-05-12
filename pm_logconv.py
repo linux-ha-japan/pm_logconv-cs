@@ -3266,19 +3266,17 @@ class LogConvertFuncs:
 	def detect_attr_updated(self, outputobj, logelm, lconvfrm):
 		try:
 			# attribute name can has empty char.
-			funcname_endpos = logelm.halogmsg.index(':')
-			callid_endpos = logelm.halogmsg.index(':', (funcname_endpos + 1))
-			attr_and_val = \
-				logelm.halogmsg[(callid_endpos + 1):].strip().split('=')
-			attrname = attr_and_val[0]
-			attrval = attr_and_val[1]
+			wordlist = logelm.halogmsg.split()
+			from_node = self.trimmark(wordlist[2].split("[")[1])
+			attrname = wordlist[2].split("[")[0]
+			attrval = wordlist[5]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(attrname, attrval):
 			return CONV_ITEM_EMPTY
 
-		convertedlog = ("Attribute \"%s\" is updated to \"%s\"." %
-			(attrname, attrval))
+		convertedlog = ("Attribute \"%s\" is updated to \"%s\" at \"%s\"." %
+			(attrname, attrval, from_node))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
 
@@ -3292,13 +3290,16 @@ class LogConvertFuncs:
 	'''
 	def detect_attr_deleted(self, outputobj, logelm, lconvfrm):
 		try:
-			attrname = logelm.halogmsg.split(',')[1].strip().split("=")[1]
+			wordlist = logelm.halogmsg.split()
+			from_node = self.trimmark(wordlist[2].split("[")[1])
+			attrname = wordlist[2].split("[")[0]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(attrname):
 			return CONV_ITEM_EMPTY
 
-		convertedlog = ("Attribute \"%s\" is deleted." % attrname)
+		convertedlog = ("Attribute \"%s\" is deleted at \"%s\"." %
+			(attrname, from_node))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
 
