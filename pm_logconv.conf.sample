@@ -234,7 +234,7 @@ loglevel=info
 
 #MsgNo.21-2
 [fence operation succeeded]
-pattern=crmd,notice:,tengine_stonith_notify:,was terminated
+pattern=crmd,notice:,tengine_stonith_notify:,was terminated,!by a human
 func=fence_op_ended
 loglevel=info
 
@@ -266,6 +266,13 @@ loglevel=info
 pattern=stonith-ng,notice:,process_remote_stonith_exec:,Call to,on behalf of,!OK
 func=exec_st_device_ended
 loglevel=warning
+
+#MsgNo.21-8
+[Manual stonith confirm]
+pattern=crmd,notice:,tengine_stonith_notify:,was terminated,by a human
+func=fence_op_ended
+loglevel=info
+fotrigger=3
 
 ###
 # For attribute event.

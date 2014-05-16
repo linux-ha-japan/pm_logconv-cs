@@ -3164,13 +3164,13 @@ class LogConvertFuncs:
 		if self.is_empty(tgt_node, op, by_node, for_node, result):
 			return CONV_ITEM_EMPTY
 
-		if for_node == HOSTNAME:
-			if result == "OK":
-				convertedlog = ("Succeeded to STONITH (%s) %s by %s." % (op, tgt_node, by_node))
-			else:
-				convertedlog = ("Failed to STONITH (%s) %s by %s."    % (op, tgt_node, by_node))
+		if result == "OK":
+			convertedlog = ("Succeeded to STONITH (%s) %s by %s." % (op, tgt_node, by_node))
+		else:
+			convertedlog = ("Failed to STONITH (%s) %s by %s."    % (op, tgt_node, by_node))
 
-			outputobj.output_log(lconvfrm.loglevel, convertedlog)
+		outputobj.output_log(lconvfrm.loglevel, convertedlog)
+
 		return CONV_OK
 
 	'''
