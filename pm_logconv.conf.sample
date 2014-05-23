@@ -289,11 +289,6 @@ pattern=attrd,info:,attrd_peer_update:,Setting,-> \(null\),!fail-count-,!last-fa
 func=detect_attr_deleted
 loglevel=info
 
-#MsgNo.22-3
-[Detect cib updated]
-pattern=crmd,info:,abort_transition_graph:,tag=nvpair,Transient attribute: update
-func=detect_cib_updated
-
 ###
 # For Corosync service starts.
 ###

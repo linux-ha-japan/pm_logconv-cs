@@ -3265,6 +3265,7 @@ class LogConvertFuncs:
 	'''
 	def detect_attr_updated(self, outputobj, logelm, lconvfrm):
 		try:
+			attrval = None
 			# attribute name can has empty char.
 			wordlist = logelm.halogmsg.split()
 			from_node = self.trimmark(wordlist[2].split("[")[1])
@@ -3278,6 +3279,7 @@ class LogConvertFuncs:
 		convertedlog = ("Attribute \"%s\" is updated to \"%s\" at \"%s\"." %
 			(attrname, attrval, from_node))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
+		cstat.attrDict[from_node, attrname] = attrval
 		return CONV_OK
 
 	'''
@@ -3301,35 +3303,6 @@ class LogConvertFuncs:
 		convertedlog = ("Attribute \"%s\" is deleted at \"%s\"." %
 			(attrname, from_node))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
-		return CONV_OK
-
-	'''
-		Detect cib updated or added.
-
-		MsgNo. 22-3)
-			Jan  1 00:00:00 node01 crmd[777]:     info: abort_transition_graph: 
-				te_update_diff:172 - Triggered transition abort (complete=0, 
-				node=node01, tag=nvpair, id=status-2657462464-diskcheck_status, 
-				name=diskcheck_status, value=ERROR, magic=NA, cib=0.568.22) : 
-				Transient attribute: update
-	'''
-	def detect_cib_updated(self, outputobj, logelm, lconvfrm):
-		try:
-			attrval=None
-			for word in logelm.halogmsg.split(", "):
-				if word.startswith("node="):
-					nodename = word.split("=")[1]
-				elif word.startswith("name="):
-					attrname = word.split("=")[1]
-				elif word.startswith("value="):
-					attrval = word.split("=")[1]
-		except:
-			return CONV_PARSE_ERROR
-
-		if self.is_empty(nodename, attrname, attrval):
-			return CONV_ITEM_EMPTY
-
-		cstat.attrDict[nodename, attrname] = attrval
 		return CONV_OK
 
 	##########
