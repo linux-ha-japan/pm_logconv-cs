@@ -3380,7 +3380,7 @@ class LogConvertFuncs:
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
 
+pm_log = LogconvLog(LogconvLog.LOG_INFO, None)
 
 if __name__ == "__main__":
-	pm_log = LogconvLog(LogconvLog.LOG_INFO, None)
 	sys.exit(LogConvert().main())
