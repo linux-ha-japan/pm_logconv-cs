@@ -2364,8 +2364,8 @@ class LogConvertFuncs:
 		}
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid, op = self.parse_opid(wordlist[3])[:2]
-			rcstr = self.trimmark(wordlist[5],"=")
+			rscid, op = self.parse_opid(wordlist[2])[:2]
+			rcstr = self.trimmark(wordlist[6],"=")
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, op, rcstr):
@@ -2425,8 +2425,8 @@ class LogConvertFuncs:
 	def operation_failed(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid, op = self.parse_opid(wordlist[3])[:2]
-			rcstr = self.trimmark(wordlist[5],"=")
+			rscid, op = self.parse_opid(wordlist[2])[:2]
+			rcstr = self.trimmark(wordlist[7],"=")
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, op, rcstr):
@@ -2463,7 +2463,7 @@ class LogConvertFuncs:
 	'''
 	def operation_timedout_ocf(self, outputobj, logelm, lconvfrm):
 		try:
-			opid = logelm.halogmsg.split()[3]
+			opid = logelm.halogmsg.split()[2]
 			rscid, op = self.parse_opid(opid)[:2]
 		except:
 			return CONV_PARSE_ERROR
@@ -2491,8 +2491,8 @@ class LogConvertFuncs:
 	def detect_rsc_failure(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid = self.parse_opid(wordlist[3])[0]
-			rcstr = self.trimmark(wordlist[5],"=")
+			rscid = self.parse_opid(wordlist[2])[0]
+			rcstr = self.trimmark(wordlist[7],"=")
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, rcstr):
@@ -3164,13 +3164,13 @@ class LogConvertFuncs:
 		if self.is_empty(tgt_node, op, by_node, for_node, result):
 			return CONV_ITEM_EMPTY
 
-		if for_node == HOSTNAME:
-			if result == "OK":
-				convertedlog = ("Succeeded to STONITH (%s) %s by %s." % (op, tgt_node, by_node))
-			else:
-				convertedlog = ("Failed to STONITH (%s) %s by %s."    % (op, tgt_node, by_node))
+		if result == "OK":
+			convertedlog = ("Succeeded to STONITH (%s) %s by %s." % (op, tgt_node, by_node))
+		else:
+			convertedlog = ("Failed to STONITH (%s) %s by %s."    % (op, tgt_node, by_node))
 
-			outputobj.output_log(lconvfrm.loglevel, convertedlog)
+		outputobj.output_log(lconvfrm.loglevel, convertedlog)
+
 		return CONV_OK
 
 	'''
@@ -3265,21 +3265,21 @@ class LogConvertFuncs:
 	'''
 	def detect_attr_updated(self, outputobj, logelm, lconvfrm):
 		try:
+			attrval = None
 			# attribute name can has empty char.
-			funcname_endpos = logelm.halogmsg.index(':')
-			callid_endpos = logelm.halogmsg.index(':', (funcname_endpos + 1))
-			attr_and_val = \
-				logelm.halogmsg[(callid_endpos + 1):].strip().split('=')
-			attrname = attr_and_val[0]
-			attrval = attr_and_val[1]
+			wordlist = logelm.halogmsg.split()
+			from_node = self.trimmark(wordlist[2].split("[")[1])
+			attrname = wordlist[2].split("[")[0]
+			attrval = wordlist[5]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(attrname, attrval):
 			return CONV_ITEM_EMPTY
 
-		convertedlog = ("Attribute \"%s\" is updated to \"%s\"." %
-			(attrname, attrval))
+		convertedlog = ("Attribute \"%s\" is updated to \"%s\" at \"%s\"." %
+			(attrname, attrval, from_node))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
+		cstat.attrDict[from_node, attrname] = attrval
 		return CONV_OK
 
 	'''
@@ -3292,43 +3292,17 @@ class LogConvertFuncs:
 	'''
 	def detect_attr_deleted(self, outputobj, logelm, lconvfrm):
 		try:
-			attrname = logelm.halogmsg.split(',')[1].strip().split("=")[1]
+			wordlist = logelm.halogmsg.split()
+			from_node = self.trimmark(wordlist[2].split("[")[1])
+			attrname = wordlist[2].split("[")[0]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(attrname):
 			return CONV_ITEM_EMPTY
 
-		convertedlog = ("Attribute \"%s\" is deleted." % attrname)
+		convertedlog = ("Attribute \"%s\" is deleted at \"%s\"." %
+			(attrname, from_node))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
-		return CONV_OK
-
-	'''
-		Detect cib updated or added.
-
-		MsgNo. 22-3)
-			Jan  1 00:00:00 node01 crmd[777]:     info: abort_transition_graph: 
-				te_update_diff:172 - Triggered transition abort (complete=0, 
-				node=node01, tag=nvpair, id=status-2657462464-diskcheck_status, 
-				name=diskcheck_status, value=ERROR, magic=NA, cib=0.568.22) : 
-				Transient attribute: update
-	'''
-	def detect_cib_updated(self, outputobj, logelm, lconvfrm):
-		try:
-			attrval=None
-			for word in logelm.halogmsg.split(", "):
-				if word.startswith("node="):
-					nodename = word.split("=")[1]
-				elif word.startswith("name="):
-					attrname = word.split("=")[1]
-				elif word.startswith("value="):
-					attrval = word.split("=")[1]
-		except:
-			return CONV_PARSE_ERROR
-
-		if self.is_empty(nodename, attrname, attrval):
-			return CONV_ITEM_EMPTY
-
-		cstat.attrDict[nodename, attrname] = attrval
 		return CONV_OK
 
 	##########
@@ -3379,7 +3353,7 @@ class LogConvertFuncs:
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
 
+pm_log = LogconvLog(LogconvLog.LOG_INFO, None)
 
 if __name__ == "__main__":
-	pm_log = LogconvLog(LogconvLog.LOG_INFO, None)
 	sys.exit(LogConvert().main())
