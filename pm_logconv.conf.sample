@@ -252,18 +252,18 @@ loglevel=error
 
 #MsgNo.21-5
 [executing stonith device start]
-pattern=stonith-ng,info:,call_remote_stonith:,Requesting that, perform op
+pattern=stonith,info:,call_remote_stonith:,Requesting that, perform op
 func=exec_st_device_started
 
 #MsgNo.21-6
 [executing stonith device succeeded]
-pattern=stonith-ng,notice:,process_remote_stonith_exec:,Call to,on behalf of,OK
+pattern=stonith,notice:,process_remote_stonith_exec:,Call to,on behalf of,OK
 func=exec_st_device_ended
 loglevel=info
 
 #MsgNo.21-7
 [executing stonith device failed]
-pattern=stonith-ng,notice:,process_remote_stonith_exec:,Call to,on behalf of,!OK
+pattern=stonith,notice:,process_remote_stonith_exec:,Call to,on behalf of,!OK
 func=exec_st_device_ended
 loglevel=warning
 
