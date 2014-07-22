@@ -1,0 +1,9 @@
+[Unit]
+Description=Pacemaker and Corosync Log Message Converter
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/usr/share/pacemaker/pm_logconv/pm_logconv.py
+Restart=always

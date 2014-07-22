@@ -9,6 +9,9 @@
 %define prefix /usr
 %define instdir pm_logconv
 %define ORGARCH %{name}-%{version}
+# rpmbuild --with ...
+%bcond_with upstart
+%bcond_with systemd
 #
 #
 Summary: Pacemaker and Corosync log converter
@@ -47,7 +50,9 @@ rm -rf $RPM_BUILD_ROOT
 ########################################
 
 ########################################
-%configure
+%configure \
+%{?with_upstart:--enable-upstart} \
+%{?with_systemd:--enable-systemd}
 ########################################
 
 ########################################
@@ -76,7 +81,12 @@ true
 ########################################
 %preun
 ########################################
-true
+%if %{with systemd}
+%systemd_preun pm_logconv.service
+%endif
+%if %{with upstart}
+/sbin/initctl stop pm_logconv_init > /dev/null 2>&1 || :
+%endif
 ########################################
 %postun
 ########################################
@@ -90,3 +100,6 @@ true
 %config /etc/pm_logconv.conf.sample
 %dir %{prefix}/share/pacemaker/%{instdir}
 %{prefix}/share/pacemaker/%{instdir}/pm_logconv.py
+%{?with_upstart:%attr (644, root, root) %{_sysconfdir}/init/pm_logconv_init.conf}
+%{?with_systemd:%attr (644, root, root) %{_unitdir}/pm_logconv.service}
+

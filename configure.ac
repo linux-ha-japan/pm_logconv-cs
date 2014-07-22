@@ -43,6 +43,40 @@ exec_prefix=`var "$exec_prefix" "$prefix"`
 datadir=`var "$datadir" "$prefix/share"`
 config_dir=`var "$config_dir" "/etc/"`
 
+AC_ARG_ENABLE([upstart],
+        [AS_HELP_STRING([--enable-upstart],
+                [support for the Upstart (default is no)])],
+        [],
+        [enable_upstart=no]
+        )
+AM_CONDITIONAL(SUPPORT_UPSTART, [test x"${enable_upstart}" = x"yes"])
+
+AC_ARG_ENABLE([systemd],
+        [AS_HELP_STRING([--enable-systemd],
+                [support for the Systemd (default is no)])],
+        [],
+        [enable_systemd=no]
+        )
+AM_CONDITIONAL(SUPPORT_SYSTEMD, [test x"${enable_systemd}" = x"yes"])
+
+if test "x${enable_upstart}" = x"yes"; then
+        AC_CHECK_PROG([UPSTART], [initctl], [yes], [no])
+        if test "x${UPSTART}" = x"no"; then
+                AC_MSG_ERROR("Not found initctl")
+        fi
+        WITH_LIST="${WITH_LIST} --with upstart"
+        PACKAGE_FEATURES="$PACKAGE_FEATURES upstart"
+fi
+
+if test "x${enable_systemd}" = x"yes"; then
+        AC_CHECK_PROG([SYSTEMD], [systemctl], [yes], [no])
+        if test "x${SYSTEMD}" = x"no"; then
+                AC_MSG_ERROR("Not found systemctl")
+        fi
+        WITH_LIST="${WITH_LIST} --with systemd"
+        PACKAGE_FEATURES="$PACKAGE_FEATURES systemd"
+fi
+
 CONFIG_DIR="$config_dir"
 AC_SUBST(CONFIG_DIR)
 HA_DATADIR="$datadir"
@@ -51,6 +85,8 @@ HA_NOARCHDATAHBDIR="$HA_DATADIR/$PM_PKG"
 AC_SUBST(HA_NOARCHDATAHBDIR)
 AC_PROG_LN_S
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES(Makefile	\
+		init/Makefile
+		)
 AC_OUTPUT
 
