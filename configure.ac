@@ -18,6 +18,9 @@ if test "x${PYTHON}" = x; then
 fi
 AC_MSG_RESULT(using $PYTHON);
 
+# use when make rpm
+AC_SUBST(WITH_LIST, [""])
+
 prefix_orig="$prefix"
 prefix=`eval echo "$prefix"`
 case $prefix in
