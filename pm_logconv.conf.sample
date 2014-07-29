@@ -10,7 +10,7 @@
 #output_path = /var/log/pm_logconv.out
 #syslogformat = True
 #reset_interval = 60
-#attribute_pingd = not_defined default_ping_set or default_ping_set lt 100
+#attribute_ping = not_defined default_ping_set or default_ping_set lt 100
 #attribute_diskd = not_defined diskcheck_status or diskcheck_status eq ERROR
 #attribute_diskd_inner = not_defined diskcheck_status_internal or diskcheck_status_internal eq ERROR
 #logconv_logfacility = daemon
@@ -64,7 +64,7 @@ func=node_status_determined
 
 ###
 # For Interconnect-LAN status event
-# and Network status event (detected by pingd).
+# and Network status event (detected by ping).
 ###
 #MsgNo.7-1
 [Interconnect-LAN status dead]
