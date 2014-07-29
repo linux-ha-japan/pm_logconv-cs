@@ -3270,7 +3270,7 @@ class LogConvertFuncs:
 			wordlist = logelm.halogmsg.split()
 			from_node = self.trimmark(wordlist[2].split("[")[1])
 			attrname = wordlist[2].split("[")[0]
-			attrval = wordlist[5]
+			attrval = logelm.halogmsg.split("->")[1].split("from")[0].strip()
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(attrname, attrval):
