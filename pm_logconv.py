@@ -2569,13 +2569,35 @@ class LogConvertFuncs:
 		try:
 			wordlist = logelm.halogmsg.split()
 			idx = wordlist.index("interface") + 1
-			output = wordlist[idx]
+			interface_ip = wordlist[idx]
+			idx = wordlist.index("ringid") + 1
+			ring_no = wordlist[idx]
 		except:
 			return CONV_PARSE_ERROR
-		if self.is_empty(output):
+		if self.is_empty(interface_ip, ring_no):
 			return CONV_ITEM_EMPTY
 
-		convertedlog = ("Link %s is FAULTY." % (output))
+		convertedlog = ("Ring number %s is FAULTY (interface %s)." % (ring_no, interface_ip))
+		outputobj.output_log(lconvfrm.loglevel, convertedlog)
+		return CONV_OK
+
+	'''
+		Convert log message which means Interconnect-LAN status changed to "recovered"
+
+		MsgNo.7-2)
+			Jan  1 00:00:00 node01 corosync[777]: [TOTEM ] Automatically recovered ring 0
+	'''
+	def detect_iconnlan_recover(self, outputobj, logelm, lconvfrm):
+		try:
+			wordlist = logelm.halogmsg.split()
+			idx = wordlist.index("ring") + 1
+			ring_no = wordlist[idx]
+		except:
+			return CONV_PARSE_ERROR
+		if self.is_empty(ring_no):
+			return CONV_ITEM_EMPTY
+
+		convertedlog = ("Ring number %s is recovered." % (ring_no))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
 
