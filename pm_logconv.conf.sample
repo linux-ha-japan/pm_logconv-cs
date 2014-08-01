@@ -72,6 +72,11 @@ pattern=corosync,,Marking seqid,ringid,interface,FAULTY
 func=detect_iconnlan_dead
 loglevel=warning
 
+#MsgNo.7-2
+[Interconnect-LAN status recover]
+pattern=corosync,Automatically recovered ring
+func=detect_iconnlan_recover
+
 #MsgNo.8-1
 [Network status dead]
 pattern=ping,is inactive:
