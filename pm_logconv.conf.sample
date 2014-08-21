@@ -1,9 +1,6 @@
 #
 # pm_logconv.conf : Config file of pm_logconv for Pacemaker and Corosync
 #
-# support version
-#     Pacemaker : stable-1.1 (1.1.5 or more)
-#     Corosync  : stable-1.4 (1.4.1 or more)
 #
 [Settings]
 #ha_log_path = /var/log/ha-log

@@ -26,15 +26,12 @@ BuildRoot: %{_tmppath}/%{name}-%{version}
 BuildRequires: make
 BuildArch: noarch
 Requires: python >= 2.4, python < 3.0
-Requires: pacemaker >= 1.1.5
-Requires: corosync >= 1.4.1
+Requires: pacemaker >= 1.1.12
+Requires: corosync >= 2.3.3
 
 ########################################
 %description
 Log message converter for Pacemaker and Corosync.
-support version
-    Pacemaker : stable-1.1 (1.1.5 or more)
-    Corosync  : stable-1.4 (1.4.1 or more)
 
 ########################################
 %prep
@@ -103,3 +100,4 @@ true
 %{?with_upstart:%attr (644, root, root) %{_sysconfdir}/init/pm_logconv_init.conf}
 %{?with_systemd:%attr (644, root, root) %{_unitdir}/pm_logconv.service}
 
+%changelog

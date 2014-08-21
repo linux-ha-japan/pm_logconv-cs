@@ -3,9 +3,6 @@
 
 # pm_logconv : Pacemaker and Corosync log converter
 #
-# support version
-#     Pacemaker : stable-1.1 (1.1.5 or more)
-#     Corosync  : stable-1.4 (1.4.1 or more)
 #
 # Copyright (C) 2011 NIPPON TELEGRAPH AND TELEPHONE CORPORATION
 #
