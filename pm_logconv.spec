@@ -101,3 +101,7 @@ true
 %{?with_systemd:%attr (644, root, root) %{_unitdir}/pm_logconv.service}
 
 %changelog
+The release 2.0
+support version
+    Pacemaker : 1.1.12 or more
+    Corosync  : 2.3.3 or more
