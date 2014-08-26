@@ -56,7 +56,7 @@ func=node_status_updated
 
 #MsgNo.6-3
 [Node status determined]
-pattern=pengine,determine_online_status,Node,is online
+pattern=pengine,determine_online_status:,Node,is
 func=node_status_determined
 
 ###
