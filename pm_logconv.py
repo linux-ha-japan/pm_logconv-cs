@@ -2542,13 +2542,18 @@ class LogConvertFuncs:
 	def node_status_determined(self, outputobj, logelm, lconvfrm):
 		try:
 			nodename = logelm.halogmsg.split()[2]
+			nodestat = logelm.halogmsg.split()[4]
 		except:
 			return CONV_PARSE_ERROR
 
-		if self.is_empty(nodename):
+		if self.is_empty(nodename, nodestat):
 			return CONV_ITEM_EMPTY
 
-		cstat.nodeDict[nodename] = "online"
+		if nodestat == "online":
+			cstat.nodeDict[nodename] = "online"
+		else:
+			cstat.nodeDict[nodename] = None
+
 		return CONV_OK
 
 	##########
