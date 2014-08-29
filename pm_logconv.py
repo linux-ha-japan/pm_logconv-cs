@@ -2423,7 +2423,12 @@ class LogConvertFuncs:
 		try:
 			wordlist = logelm.halogmsg.split()
 			rscid, op = self.parse_opid(wordlist[2])[:2]
-			rcstr = self.trimmark(wordlist[7],"=")
+			idx = logelm.halogmsg.find("rc=")
+			if idx == -1:
+				idx = logelm.halogmsg.find("status=")
+			if idx == -1:
+				return CONV_PARSE_ERROR
+			rcstr = self.trimmark(logelm.halogmsg[idx:].split(',')[0],"=")
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, op, rcstr):
