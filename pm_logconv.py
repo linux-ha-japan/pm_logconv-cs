@@ -48,7 +48,9 @@ except Exception, strerror:
 CONFIGFILE = "/etc/pm_logconv.conf"
 HA_LOGFILE = "/var/log/ha-log"
 OUTPUTFILE = "/var/log/pm_logconv.out"
+OUTPUT_LOGFACILITY = None
 SYSLOGFORMAT = True
+LOGFACILITY = None
 
 #
 # Timeout(ms) for reset log convert status.
@@ -196,6 +198,8 @@ class LogconvLog:
 	facilitystr = facilitystr_map[DEFAULT_FACILITY]
 
 	def __init__(self, priority, path):
+		global LOGFACILITY
+
 		self.pid = os.getpid()
 
 		if not isinstance(priority, int) and not isinstance(priority, long):
@@ -208,8 +212,9 @@ class LogconvLog:
 		else:
 			self.output = path
 
-		self.facility = self.DEFAULT_FACILITY
+		self.facility = LOGFACILITY = self.DEFAULT_FACILITY
 		syslog.openlog("pm_logconv", self.DEFAULT_LOGOPT, self.facility)
+		self.output_facility = None
 
 	def __setattr__(self, name, val):
 		if name != "LOG_EMERG" and name != "LOG_ALERT" and \
@@ -233,20 +238,34 @@ class LogconvLog:
 		self.output = path
 		return True
 
-	def set_facility(self, facility):
+	def set_facility(self):
 		# FYI: LOG_AUTHPRIV : 10<<3
 		#      LOG_FTP      : 11<<3
-		if self.facility == facility:
+		if self.facility == LOGFACILITY:
 			return True
-		if self.facilitystr_map.has_key(facility):
-			pm_log.notice("syslog facility changed [%s] to [%s]"
-				% (self.facilitystr, self.facilitystr_map[facility]))
+		try:
 			syslog.closelog()
-			self.facility = facility
-			syslog.openlog("pm_logconv", self.DEFAULT_LOGOPT, self.facility)
-			self.facilitystr = self.facilitystr_map[facility]
+			syslog.openlog("pm_logconv", self.DEFAULT_LOGOPT, LOGFACILITY)
+			self.facilitystr = self.facilitystr_map[LOGFACILITY]
+			self.facility = LOGFACILITY
+			self.output_facility = None
 			return True
-		return False
+		except Exception, strerror:
+			print >> sys.stderr, "Error: set_facility() error occurred.", strerror
+			sys.exit(1)
+
+	def set_output_facility(self):
+		if self.output_facility == OUTPUT_LOGFACILITY:
+			return True
+		try:
+			syslog.closelog()
+			syslog.openlog("pm_logconv", self.DEFAULT_LOGOPT, OUTPUT_LOGFACILITY)
+			self.output_facility = OUTPUT_LOGFACILITY
+			self.facility = None
+			return True
+		except Exception, strerror:
+			print >> sys.stderr, "Error: set_output_facility() error occurred.", strerror
+			sys.exit(1)
 
 	def emerg(self, message):
 		if self.output == None or self.priority >= self.LOG_EMERG:
@@ -296,6 +315,7 @@ class LogconvLog:
 				return False
 
 			if self.output == None:
+				self.set_facility()
 				syslog.syslog(self.syspriority[priority], "[%d]: %8s %s" %
 					(self.pid, self.prioritystr[priority] + ':', message.rstrip()))
 			else:
@@ -552,6 +572,7 @@ class ParseConfigFile:
 		self.SEC_SETTINGS = "Settings"
 		self.OPT_HA_LOG_PATH = "ha_log_path"
 		self.OPT_OUTPUT_PATH = "output_path"
+		self.OPT_OUTPUT_LOGFACILITY = "output_logfacility"
 		self.OPT_DATEFORMAT = "syslogformat"
 		self.OPT_MANAGE_ATTR = "attribute"
 		self.OPT_PATTERN = "pattern"
@@ -562,7 +583,6 @@ class ParseConfigFile:
 		self.OPT_IGNOREMSG = "ignoremsg"
 
 		self.OPT_LOGFACILITY = "logconv_logfacility"
-		self.logfacility = None
 
 		self.OPT_ACTRSC = "act_rsc"
 
@@ -614,11 +634,13 @@ class ParseConfigFile:
 	def parse_basic_settings(self):
 		global HA_LOGFILE
 		global OUTPUTFILE
+		global OUTPUT_LOGFACILITY
 		global SYSLOGFORMAT
 		global RESET_INTERVAL
 		global attrRuleList
 		global attrRules
 		global actRscList
+		global LOGFACILITY
 
 		# Get all options in the section.
 		try:
@@ -638,7 +660,10 @@ class ParseConfigFile:
 			if optname == self.OPT_HA_LOG_PATH:
 				HA_LOGFILE = optval
 			elif optname == self.OPT_OUTPUT_PATH:
-				OUTPUTFILE = optval
+				if optval.lower() == "none":
+					OUTPUTFILE = None
+				else:
+					OUTPUTFILE = optval
 			elif optname == self.OPT_DATEFORMAT:
 				if optval.lower() == "true":
 					SYSLOGFORMAT = True
@@ -742,9 +767,16 @@ class ParseConfigFile:
 					attrRules.append(rule)
 					pm_log.debug("parse_basic_settings(): attrRules%s"%(attrRules))
 				continue # To the next option in [Settings].
+			elif optname == self.OPT_OUTPUT_LOGFACILITY:
+				if LogconvLog.facility_map.has_key(optval.lower()):
+					OUTPUT_LOGFACILITY = LogconvLog.facility_map[optval.lower()]
+				else:
+					pm_log.warn("parse_basic_settings(): " +
+						"the value of \"%s\" is invalid. " % (optname) +
+						"Ignore the setting.")
 			elif optname == self.OPT_LOGFACILITY:
 				if LogconvLog.facility_map.has_key(optval.lower()):
-					self.logfacility = LogconvLog.facility_map[optval.lower()]
+					LOGFACILITY = LogconvLog.facility_map[optval.lower()]
 				else:
 					pm_log.warn("parse_basic_settings(): " +
 						"the value of \"%s\" is invalid. " % (optname) +
@@ -763,6 +795,8 @@ class ParseConfigFile:
 			# __if optname == xxx:
 		# __for optname in setting_opts:
 
+		if OUTPUTFILE == None and OUTPUT_LOGFACILITY == None:
+			pm_log.warn("parse_basic_settings(): no setting of output_path and output_logfacility.")
 		return 0
 
 	'''
@@ -1002,8 +1036,7 @@ class LogConvert:
 		# Parse pm_logconv's basic settings.
 		pcfobj.parse_basic_settings()
 
-		if pcfobj.logfacility != None:
-			pm_log.set_facility(pcfobj.logfacility)
+		if LOGFACILITY != pm_log.DEFAULT_FACILITY:
 			pm_log.info("starting... [%s]" % args[:len(args)-1])
 
 		# check command line option.
@@ -1049,7 +1082,8 @@ class LogConvert:
 		try:
 			fileList = list()
 			if not self.stop_logconv and not self.ask_status:
-				fileList.append((OUTPUTFILE, "output file for converted message"))
+				if OUTPUTFILE != None:
+					fileList.append((OUTPUTFILE, "output file for converted message"))
 				fileList.append((HA_LOGFILE, "Pacemaker and Corosync log file"))
 				fileList.append((self.STATFILE,
 					"pm_logconv's status file (can't specify by user)"))
@@ -1716,13 +1750,17 @@ class OutputConvertedLog:
 		output_logmsg = self.orglogmsg
 		if convlogmsg != None:
 			output_logmsg = convlogmsg
+		outputstr = ("%7s: %s" % (output_loglevel, output_logmsg.rstrip()))
 
 		try:
-			outputstr = ("%s %s %7s: %s" %
-				(self.datestr, HOSTNAME, output_loglevel, output_logmsg))
-			f = open(OUTPUTFILE, 'a')
-			f.write("%s\n" % (outputstr))
-			f.close()
+			if OUTPUT_LOGFACILITY != None:
+				pm_log.set_output_facility()
+				syslog.syslog(LogConvertFuncs.loglevel_map[output_loglevel], outputstr)
+			if OUTPUTFILE != None:
+				outputstr = ("%s %s %s" % (self.datestr, HOSTNAME, outputstr))
+				f = open(OUTPUTFILE, 'a')
+				f.write("%s\n" % (outputstr))
+				f.close()
 		except Exception, strerror:
 			pm_log.error("output_log(): " +
 				"failed to output converted log message. [%s]" %
@@ -1869,6 +1907,13 @@ class LogConvertFuncs:
 	LOG_WARN_LV  = "warning"
 	LOG_INFO_LV  = "info"
 	LOG_DEBUG_LV = "debug"
+
+	loglevel_map = {
+		LOG_ERR_LV:	syslog.LOG_ERR,
+		LOG_WARN_LV:	syslog.LOG_WARNING,
+		LOG_INFO_LV:	syslog.LOG_INFO,
+		LOG_DEBUG_LV:	syslog.LOG_DEBUG,
+	}
 
 	def __init__(self, rscstatList=None):
 		# This list is used only in F/O process.

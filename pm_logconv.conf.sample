@@ -5,6 +5,7 @@
 [Settings]
 #ha_log_path = /var/log/ha-log
 #output_path = /var/log/pm_logconv.out
+#output_logfacility = local2
 #syslogformat = True
 #reset_interval = 60
 #attribute_ping = not_defined default_ping_set or default_ping_set lt 100
