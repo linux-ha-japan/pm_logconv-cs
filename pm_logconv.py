@@ -563,6 +563,16 @@ class StatusFile:
 		self.in_calc = cstat.IN_CALC
 		return
 
+	def remove(self):
+		try:
+			if os.path.exists(self.path):
+				os.remove(self.path)
+			return True
+		except Exception, strerror:
+			pm_log.error("StatusFile.remove: I/O error occurred.")
+			pm_log.debug("StatusFile.remove: I/O error occurred. [%s]" % strerror)
+			return False
+
 statfile = None
 
 class ParseConfigFile:
@@ -1568,7 +1578,9 @@ class LogConvert:
 		time.sleep(1)
 		pm_log.info("started: pid[%d], ppid[%d], pgid[%d]"
 			% (os.getpid(), os.getppid(), os.getpgrp()))
-		return self.convert()
+		ret = self.convert()
+		if not self.is_oneshot and ret == 0: statfile.remove()
+		return ret
 
 class LogElements:
 	def __init__(self, procname=None, datestr=None,
