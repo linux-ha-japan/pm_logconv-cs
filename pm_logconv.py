@@ -524,7 +524,9 @@ class StatusFile:
 	'''
 	   write to status(reading ha-log's position and status of convert) file.
 	'''
-	def write(self):
+	def write(self, is_oneshot):
+		if is_oneshot:
+			return True
 		if cstat.IN_CALC:
 			if self.in_calc:
 				return True
@@ -961,8 +963,6 @@ class LogConvert:
 		self.daemonize = False
 		self.stop_logconv = False
 		self.ask_status = False
-		self.is_continue = False
-		self.is_present = False
 		self.is_oneshot = False
 		self.configfile = CONFIGFILE
 		now = datetime.datetime.now()
@@ -976,9 +976,9 @@ class LogConvert:
 		if not self.parse_args():
 			sys.exit(1)
 
-		pm_log.debug("option: daemon[%d], stop[%d], status[%d], continue[%d], " \
-			"present[%d], oneshot[%d], config[%s], facility[%s]" % (self.daemonize, self.stop_logconv,
-			self.ask_status, self.is_continue, self.is_present, self.is_oneshot, self.configfile, pm_log.facilitystr))
+		pm_log.debug("option: daemon[%d], stop[%d], status[%d], oneshot[%d], " \
+			"config[%s], facility[%s]" % (self.daemonize, self.stop_logconv,
+			self.ask_status, self.is_oneshot, self.configfile, pm_log.facilitystr))
 		if not self.stop_logconv and not self.ask_status:
 			pm_log.debug("option: target[%s], output[%s], syslogfmt[%s], reset_interval[%d], actrsc%s" % (HA_LOGFILE, OUTPUTFILE, SYSLOGFORMAT, RESET_INTERVAL, actRscList))
 
@@ -1003,12 +1003,8 @@ class LogConvert:
 			default=False, help="stop the pm_logconv if it is already running")
 		psr.add_option("-s", action="store_true", dest="ask_status",
 			default=False, help="return pm_logconv status")
-		psr.add_option("-c", action="store_true", dest="is_continue",
-			default=False, help="start with a continuous mode (\"-p\" or \"-o\" option is mutually exclusive)")
-		psr.add_option("-p", action="store_true", dest="is_present",
-			default=False, help="start with a present mode    (\"-c\" or \"-o\" option is mutually exclusive)")
 		psr.add_option("-o", action="store_true", dest="is_oneshot",
-			default=False, help="start with a oneshot mode    (\"-c\" or \"-p\" option is mutually exclusive)")
+			default=False, help="start with a oneshot mode")
 		psr.add_option("-f", dest="config_file", default=CONFIGFILE,
 			help="the specified configuration file is used")
 		psr.add_option("-v", "--version", action="callback", callback=print_version,
@@ -1024,8 +1020,6 @@ class LogConvert:
 		self.daemonize = opts.daemonize
 		self.stop_logconv = opts.stop_logconv
 		self.ask_status = opts.ask_status
-		self.is_continue = opts.is_continue
-		self.is_present = opts.is_present
 		self.is_oneshot = opts.is_oneshot
 		self.configfile = opts.config_file
 
@@ -1049,34 +1043,9 @@ class LogConvert:
 						"and -s cannot be specified at the same time.")
 					return False
 
-		if (self.stop_logconv or self.ask_status) and self.is_continue:
-			pm_log.error("parse_args: option -k and -s cannot be specified with -c.")
-			return False
-
-		if (self.stop_logconv or self.ask_status) and self.is_present:
-			pm_log.error("parse_args: option -k and -s cannot be specified with -p.")
-			return False
-
 		if (self.stop_logconv or self.ask_status) and self.is_oneshot:
 			pm_log.error("parse_args: option -k and -s cannot be specified with -o.")
 			return False
-
-		if \
-			(self.is_continue and self.is_present) or \
-			(self.is_continue and self.is_oneshot) or \
-			(self.is_present  and self.is_oneshot):
-			pm_log.error("parse_args: options -c ,-p and -o are mutually exclusive.")
-			return False
-
-		if not self.is_continue and not self.is_present and not self.is_oneshot:
-			# check Corosync active or dead.
-			ret = self.funcs.is_corosync()
-			if ret == None:
-				return False
-			elif ret:
-				self.is_continue = True
-			else:
-				self.is_present = True
 
 		# check file path. isn't the same path specified?
 		try:
@@ -1217,11 +1186,8 @@ class LogConvert:
 	'''
 	def get_fd(self, statfile):
 		try:
-			if self.is_continue:
-				if statfile.read() and cstat.ino == 0:
-					pm_log.error("get_fd: status file doesn't exist.")
-
-				if cstat.ino > 0:
+			if not self.is_oneshot:
+				if statfile.read() and cstat.ino > 0:
 					if os.path.exists(HA_LOGFILE) and \
 						cstat.ino == os.stat(HA_LOGFILE)[ST_INO]:
 						log = HA_LOGFILE
@@ -1255,7 +1221,7 @@ class LogConvert:
 
 			if os.path.exists(HA_LOGFILE):
 				f = open(HA_LOGFILE, 'r')
-				if self.is_present:
+				if not self.is_oneshot:
 					f.seek(os.fstat(f.fileno()).st_size)
 			else:
 				while not os.path.exists(HA_LOGFILE):
@@ -1363,7 +1329,7 @@ class LogConvert:
 			self.funcs.clear_status()
 			pm_log.debug("check_dc_and_reset(): " +
 					"reset log convert status complete.")
-			if statfile: statfile.write()
+			if statfile: statfile.write(self.is_oneshot)
 		elif ret == False:
 			pm_log.debug("check_dc_and_reset(): DC node is not idle. " +
 				"Avoid to reset log convert status.")
@@ -1535,7 +1501,7 @@ class LogConvert:
 
 					if cstat.ino != statfile.w_ino or \
 						cstat.offset != statfile.w_offset:
-						statfile.write()
+						statfile.write(self.is_oneshot)
 
 					if os.fstat(logfile.fileno()).st_size < cstat.offset:
 						pm_log.warn("convert: there is possibility that " \
@@ -1546,7 +1512,7 @@ class LogConvert:
 						logfile.seek(0)
 						cstat.offset = 0
 						self.funcs.clear_status()
-						statfile.write()
+						statfile.write(self.is_oneshot)
 
 					if os.path.exists(HA_LOGFILE) and \
 						cstat.ino == os.stat(HA_LOGFILE)[ST_INO]:
@@ -1570,7 +1536,7 @@ class LogConvert:
 					cstat.ino = os.fstat(logfile.fileno()).st_ino
 				else:
 					self.do_ptn_matching(logline.replace('#011', ' '))
-					statfile.write()
+					statfile.write(self.is_oneshot)
 		except Exception, strerror:
 			pm_log.error("convert: error occurred.")
 			pm_log.debug("convert: error occurred. [%s]" % strerror)
@@ -1921,24 +1887,6 @@ class LogConvertFuncs:
 		# read from start of F/O, so it doesn't need to output status file.
 		self.rscstatList = rscstatList
 		self.rscstatList = list()
-
-	'''
-		Check Corosync service is active or dead.
-		return: True  -> active
-				False -> dead
-				None  -> error occurs.
-	'''
-	def is_corosync(self):
-		# Get DC node name.
-		status = self.exec_outside_cmd("service", "corosync status", False)[0]
-		if status == None:
-			# Failed to exec command.
-			pm_log.warn("is_corosync(): failed to get status.")
-			return None
-		if status != 0:
-			# Maybe during DC election.
-			return False
-		return True
 
 	'''
 		triming mark from value.
