@@ -46,6 +46,7 @@ except Exception, strerror:
 # (when not specified with configuration file or command line option.)
 #
 CONFIGFILE = "/etc/pm_logconv.conf"
+SYSCONFIGFILE = "/usr/share/pacemaker/pm_logconv/pm_logconv_rules.conf"
 HA_LOGFILE = "/var/log/ha-log"
 OUTPUTFILE = "/var/log/pm_logconv.out"
 OUTPUT_LOGFACILITY = None
@@ -578,9 +579,8 @@ statfile = None
 class ParseConfigFile:
 	'''
 		Initialization to parse config file.
-		Open the config file. Its fd should be close in __del__().
 	'''
-	def __init__(self, config_file):
+	def __init__(self):
 		self.SEC_SETTINGS = "Settings"
 		self.OPT_HA_LOG_PATH = "ha_log_path"
 		self.OPT_OUTPUT_PATH = "output_path"
@@ -599,31 +599,41 @@ class ParseConfigFile:
 		self.OPT_ACTRSC = "act_rsc"
 
 		self.fp = None
-		self.cf = ConfigParser.RawConfigParser()
-		# open the config file to read.
-		if not os.path.exists(config_file):
-			pm_log.error("ParseConfigFile.__init__(): " +
-				"config file [%s] does not exist." % (config_file))
-			#__init__ should return None...
-			sys.exit(1)
-		try:
-			self.fp = open(config_file)
-			self.cf.readfp(self.fp)
-		except Exception, strerror:
-			pm_log.error("ParseConfigFile.__init__(): " +
-				"failed to read config file [%s]." % (config_file))
-			pm_log.debug("ParseConfigFile.__init__(): %s" % (strerror))
-			#__init__ should return None...
-			sys.exit(1)
+		self.cf = None
+		self.fp_sys = None
+		self.cf_sys = None
 
 	def __del__(self):
 		if self.fp is not None:
 			self.fp.close()
+		if self.fp_sys is not None:
+			self.fp_sys.close()
 
-	def get_optval(self, secname, optname):
+	'''
+		Open the config file. Its fd should be close in __del__().
+	'''
+	def open_config_file(self, config_file):
+		fp = None
+		cf = ConfigParser.RawConfigParser()
+		# open the config file to read.
+		if not os.path.exists(config_file):
+			pm_log.error("ParseConfigFile.open_config_file(): " +
+				"config file [%s] does not exist." % (config_file))
+			sys.exit(1)
+		try:
+			fp = open(config_file)
+			cf.readfp(fp)
+		except Exception, strerror:
+			pm_log.error("ParseConfigFile.open_config_file(): " +
+				"failed to read config file [%s]." % (config_file))
+			pm_log.debug("ParseConfigFile.open_config_file(): %s" % (strerror))
+			sys.exit(1)
+		return  fp, cf
+
+	def get_optval(self, cfobj, secname, optname):
 		optval = None
 		try:
-			optval = self.cf.get(secname, optname)
+			optval = cfobj.get(secname, optname)
 		except Exception, strerror:
 			pm_log.warn("get_optval(): " +
 				"failed to get value of \"%s\" in [%s] section. " %
@@ -643,7 +653,7 @@ class ParseConfigFile:
 		return 0   : succeeded.
 		       0 > : error occurs.
 	'''
-	def parse_basic_settings(self):
+	def parse_basic_settings(self, config_file):
 		global HA_LOGFILE
 		global OUTPUTFILE
 		global OUTPUT_LOGFACILITY
@@ -654,6 +664,9 @@ class ParseConfigFile:
 		global actRscList
 		global LOGFACILITY
 
+		# Open the user config file
+		self.fp, self.cf = self.open_config_file(config_file)
+
 		# Get all options in the section.
 		try:
 			setting_opts = self.cf.options(self.SEC_SETTINGS)
@@ -663,7 +676,7 @@ class ParseConfigFile:
 			return (-1)
 
 		for optname in setting_opts:
-			optval = self.get_optval(self.SEC_SETTINGS, optname)
+			optval = self.get_optval(self.cf, self.SEC_SETTINGS, optname)
 			if not optval:
 				pm_log.warn("parse_basic_settings(): " +
 					"Ignore the setting of \"%s\"." % (optname))
@@ -816,13 +829,18 @@ class ParseConfigFile:
 		return 0   : succeeded.
 		       0 > : error occurs.
 	'''
-	def parse_logconv_settings(self):
-		logconv_sections = self.cf.sections()
+	def parse_logconv_settings(self, config_file):
+		# Open the system config file
+		self.fp_sys, self.cf_sys = self.open_config_file(config_file)
+
+		logconv_sections = self.cf_sys.sections()
 		try:
 			logconv_sections.remove(self.SEC_SETTINGS)
+			pm_log.debug("parse_logconv_settings(): " +
+				"[%s] section exists in [%s] (ignored). " %
+					(self.SEC_SETTINGS, SYSCONFIGFILE))
 		except:
-			pm_log.warn("parse_logconv_settings(): " +
-				"[%s] section does not exist. " % (self.SEC_SETTINGS))
+			pass
 
 		#
 		# Parse each section.
@@ -830,7 +848,7 @@ class ParseConfigFile:
 		for secname in logconv_sections:
 			# Get all options in the section.
 			try:
-				logconv_opts = self.cf.options(secname)
+				logconv_opts = self.cf_sys.options(secname)
 			except:
 				pm_log.warn("parse_logconv_settings(): " +
 					"[%s] section does not exist. " % (secname) +
@@ -840,7 +858,7 @@ class ParseConfigFile:
 			lconvfrm = LogconvFrame()
 			lconvfrm.rulename = secname
 			for optname in logconv_opts:
-				optval = self.get_optval(secname, optname)
+				optval = self.get_optval(self.cf_sys, secname, optname)
 				if not optval:
 					pm_log.warn("parse_logconv_settings(): " +
 						"Ignore the setting of \"%s\"." % (optname))
@@ -1036,9 +1054,9 @@ class LogConvert:
 		'''
 			Parse config file.
 		'''
-		pcfobj = ParseConfigFile(self.configfile)
+		pcfobj = ParseConfigFile()
 		# Parse pm_logconv's basic settings.
-		pcfobj.parse_basic_settings()
+		pcfobj.parse_basic_settings(self.configfile)
 
 		if LOGFACILITY != pm_log.DEFAULT_FACILITY:
 			pm_log.info("starting... [%s]" % args[:len(args)-1])
@@ -1087,7 +1105,7 @@ class LogConvert:
 
 		if not self.stop_logconv and not self.ask_status:
 			# Parse settings for log convertion.
-			pcfobj.parse_logconv_settings()
+			pcfobj.parse_logconv_settings(SYSCONFIGFILE)
 		return True
 
 	'''

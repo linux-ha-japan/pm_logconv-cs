@@ -1,6 +1,7 @@
 logconv_NAME = pm_logconv
 logconv_SCRIPTS = $(logconv_NAME).py
 logconv_CONFIG = $(logconv_NAME).conf.sample
+logconv_DATA = $(logconv_NAME)_rules.conf
 
 MAINTAINERCLEANFILES = Makefile.in
 logconvdir = @HA_NOARCHDATAHBDIR@/$(logconv_NAME)
@@ -11,7 +12,7 @@ SUBDIRS         = init
 SHAREDIR = $(logconvdir)
 SPEC = $(logconv_NAME).spec
 TARFILE = $(PACKAGE_NAME)-$(VERSION).tar.gz
-EXTRA_DIST = $(logconv_SCRIPTS) $(logconv_CONFIG) $(SPEC) init
+EXTRA_DIST = $(logconv_SCRIPTS) $(logconv_CONFIG) $(logconv_DATA) $(SPEC) init
 
 install-data-hook:
 	@$(NORMAL_INSTALL)
