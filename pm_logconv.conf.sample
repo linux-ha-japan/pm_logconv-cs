@@ -12,5 +12,6 @@
 #attribute_diskd = not_defined diskcheck_status or diskcheck_status eq ERROR
 #attribute_diskd_inner = not_defined diskcheck_status_internal or diskcheck_status_internal eq ERROR
 #logconv_logfacility = daemon
+#logconv_logpriority = info
 #act_rsc = prmExPostgreSQLDB, prmApPostgreSQLDB
 

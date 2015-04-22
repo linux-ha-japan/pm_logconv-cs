@@ -228,7 +228,7 @@ class LogconvLog:
 	def set_priority(self, priority):
 		if not isinstance(priority, int) and not isinstance(priority, long):
 			return False
-		if self.LOG_EMERG < priority and self.DEBUG > priority:
+		if priority < self.LOG_EMERG or priority > self.LOG_DEBUG:
 			return False
 		self.priority = priority
 		return True
@@ -269,42 +269,42 @@ class LogconvLog:
 			sys.exit(1)
 
 	def emerg(self, message):
-		if self.output == None or self.priority >= self.LOG_EMERG:
+		if self.priority >= self.LOG_EMERG:
 			return self.logging(self.LOG_EMERG, message)
 		return True
 
 	def alert(self, message):
-		if self.output == None or self.priority >= self.LOG_ALERT:
+		if self.priority >= self.LOG_ALERT:
 			return self.logging(self.LOG_ALERT, message)
 		return True
 
 	def crit(self, message):
-		if self.output == None or self.priority >= self.LOG_CRIT:
+		if self.priority >= self.LOG_CRIT:
 			return self.logging(self.LOG_CRIT, message)
 		return True
 
 	def error(self, message):
-		if self.output == None or self.priority >= self.LOG_ERR:
+		if self.priority >= self.LOG_ERR:
 			return self.logging(self.LOG_ERR, message)
 		return True
 
 	def warn(self, message):
-		if self.output == None or self.priority >= self.LOG_WARNING:
+		if self.priority >= self.LOG_WARNING:
 			return self.logging(self.LOG_WARNING, message)
 		return True
 
 	def notice(self, message):
-		if self.output == None or self.priority >= self.LOG_NOTICE:
+		if self.priority >= self.LOG_NOTICE:
 			return self.logging(self.LOG_NOTICE, message)
 		return True
 
 	def info(self, message):
-		if self.output == None or self.priority >= self.LOG_INFO:
+		if self.priority >= self.LOG_INFO:
 			return self.logging(self.LOG_INFO, message)
 		return True
 
 	def debug(self, message):
-		if self.output == None or self.priority >= self.LOG_DEBUG:
+		if self.priority >= self.LOG_DEBUG:
 			return self.logging(self.LOG_DEBUG, message)
 		return True
 
@@ -595,6 +595,7 @@ class ParseConfigFile:
 		self.OPT_IGNOREMSG = "ignoremsg"
 
 		self.OPT_LOGFACILITY = "logconv_logfacility"
+		self.OPT_LOGPRIORITY = "logconv_logpriority"
 
 		self.OPT_ACTRSC = "act_rsc"
 
@@ -802,6 +803,13 @@ class ParseConfigFile:
 			elif optname == self.OPT_LOGFACILITY:
 				if LogconvLog.facility_map.has_key(optval.lower()):
 					LOGFACILITY = LogconvLog.facility_map[optval.lower()]
+				else:
+					pm_log.warn("parse_basic_settings(): " +
+						"the value of \"%s\" is invalid. " % (optname) +
+						"Ignore the setting.")
+			elif optname == self.OPT_LOGPRIORITY:
+				if optval.lower() in LogconvLog.prioritystr:
+					pm_log.set_priority(LogconvLog.prioritystr.index(optval.lower()))
 				else:
 					pm_log.warn("parse_basic_settings(): " +
 						"the value of \"%s\" is invalid. " % (optname) +
