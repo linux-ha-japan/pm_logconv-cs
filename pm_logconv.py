@@ -2503,10 +2503,6 @@ class LogConvertFuncs:
 		if self.is_empty(rscid, op):
 			return CONV_ITEM_EMPTY
 
-		# remove from timed out rscop list.
-		# Because it became clear that the operation timed out.
-		rscid_and_op = ("%s:%s" % (rscid, op))
-
 		convertedlog = ("Resource %s failed to %s. (Timed Out)" % (rscid, op))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
