@@ -1438,8 +1438,6 @@ class LogConvert:
 							self.funcs.detect_fo_start(outputobj)
 					if lconvfrm.ignoremsg:
 						setdate = False
-				elif ret == CONV_SHUT_NODE:
-					continue
 				else:
 					if ret == CONV_PARSE_ERROR:
 						errmsg = ("%s(): " % (lconvfrm.func) +
@@ -1849,7 +1847,6 @@ class RscStat:
 '''
 	Return codes for functions to convert log.
 '''
-CONV_SHUT_NODE		=  1	#shutdown list existed.
 CONV_OK				=  0	#log conversion succeeded.
 CONV_PARSE_ERROR	= -1	#failed to parse log message.
 CONV_ITEM_EMPTY		= -2	#parsing succeeded, but some gotten items are empty.
