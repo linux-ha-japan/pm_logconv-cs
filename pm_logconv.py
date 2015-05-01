@@ -588,7 +588,6 @@ class ParseConfigFile:
 		self.OPT_DATEFORMAT = "syslogformat"
 		self.OPT_MANAGE_ATTR = "attribute"
 		self.OPT_PATTERN = "pattern"
-		self.OPT_RESET_INTERVAL = "reset_interval"
 		self.OPT_FUNCNAME = "func"
 		self.OPT_LOGLEVEL = "loglevel"
 		self.OPT_FOTRIGGER = "fotrigger"
@@ -699,18 +698,6 @@ class ParseConfigFile:
 					pm_log.warn("parse_basic_settings(): " +
 						"the value of \"%s\" is invalid. " % (optname) +
 						"Ignore the setting.")
-			elif optname == self.OPT_RESET_INTERVAL:
-				try:
-					tmpval = int(optval)
-					# 1 to 32bit integer max value
-					if tmpval > 0 and tmpval <= 2147483647:
-						RESET_INTERVAL = tmpval
-					else:
-						raise
-				except:
-					pm_log.warn("parse_basic_settings(): " +
-						"the value of \"%s\" is invalid. " % (optname) +
-						"set an default value(60).")
 			elif optname.startswith(self.OPT_MANAGE_ATTR) and optval.count(','):
 				attrRule = optval.split(',')
 				if len(attrRule) != 3:
@@ -1015,7 +1002,7 @@ class LogConvert:
 			"config[%s], facility[%s]" % (self.daemonize, self.stop_logconv,
 			self.ask_status, self.is_oneshot, self.configfile, pm_log.facilitystr))
 		if not self.stop_logconv and not self.ask_status:
-			pm_log.debug("option: target[%s], output[%s], syslogfmt[%s], reset_interval[%d], actrsc%s" % (HA_LOGFILE, OUTPUTFILE, SYSLOGFORMAT, RESET_INTERVAL, actRscList))
+			pm_log.debug("option: target[%s], output[%s], syslogfmt[%s], actrsc%s" % (HA_LOGFILE, OUTPUTFILE, SYSLOGFORMAT, actRscList))
 
 	'''
 	   PID and status(read position of ha-log and status of convert) file path

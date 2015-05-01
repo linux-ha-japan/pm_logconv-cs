@@ -7,7 +7,6 @@
 #output_path = /var/log/pm_logconv.out
 #output_logfacility = local2
 #syslogformat = True
-#reset_interval = 60
 #attribute_ping = not_defined default_ping_set or default_ping_set lt 100
 #attribute_diskd = not_defined diskcheck_status or diskcheck_status eq ERROR
 #attribute_diskd_inner = not_defined diskcheck_status_internal or diskcheck_status_internal eq ERROR
