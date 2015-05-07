@@ -97,6 +97,7 @@ true
 %config /etc/pm_logconv.conf.sample
 %dir %{prefix}/share/pacemaker/%{instdir}
 %{prefix}/share/pacemaker/%{instdir}/pm_logconv.py
+%{prefix}/share/pacemaker/%{instdir}/pm_logconv_rules.conf
 %{?with_upstart:%attr (644, root, root) %{_sysconfdir}/init/pm_logconv_init.conf}
 %{?with_systemd:%attr (644, root, root) %{_unitdir}/pm_logconv.service}
 

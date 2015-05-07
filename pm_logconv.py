@@ -46,9 +46,12 @@ except Exception, strerror:
 # (when not specified with configuration file or command line option.)
 #
 CONFIGFILE = "/etc/pm_logconv.conf"
+SYSCONFIGFILE = "/usr/share/pacemaker/pm_logconv/pm_logconv_rules.conf"
 HA_LOGFILE = "/var/log/ha-log"
 OUTPUTFILE = "/var/log/pm_logconv.out"
+OUTPUT_LOGFACILITY = None
 SYSLOGFORMAT = True
+LOGFACILITY = None
 
 #
 # Timeout(ms) for reset log convert status.
@@ -196,6 +199,8 @@ class LogconvLog:
 	facilitystr = facilitystr_map[DEFAULT_FACILITY]
 
 	def __init__(self, priority, path):
+		global LOGFACILITY
+
 		self.pid = os.getpid()
 
 		if not isinstance(priority, int) and not isinstance(priority, long):
@@ -208,8 +213,9 @@ class LogconvLog:
 		else:
 			self.output = path
 
-		self.facility = self.DEFAULT_FACILITY
+		self.facility = LOGFACILITY = self.DEFAULT_FACILITY
 		syslog.openlog("pm_logconv", self.DEFAULT_LOGOPT, self.facility)
+		self.output_facility = None
 
 	def __setattr__(self, name, val):
 		if name != "LOG_EMERG" and name != "LOG_ALERT" and \
@@ -222,7 +228,7 @@ class LogconvLog:
 	def set_priority(self, priority):
 		if not isinstance(priority, int) and not isinstance(priority, long):
 			return False
-		if self.LOG_EMERG < priority and self.DEBUG > priority:
+		if priority < self.LOG_EMERG or priority > self.LOG_DEBUG:
 			return False
 		self.priority = priority
 		return True
@@ -233,58 +239,72 @@ class LogconvLog:
 		self.output = path
 		return True
 
-	def set_facility(self, facility):
+	def set_facility(self):
 		# FYI: LOG_AUTHPRIV : 10<<3
 		#      LOG_FTP      : 11<<3
-		if self.facility == facility:
+		if self.facility == LOGFACILITY:
 			return True
-		if self.facilitystr_map.has_key(facility):
-			pm_log.notice("syslog facility changed [%s] to [%s]"
-				% (self.facilitystr, self.facilitystr_map[facility]))
+		try:
 			syslog.closelog()
-			self.facility = facility
-			syslog.openlog("pm_logconv", self.DEFAULT_LOGOPT, self.facility)
-			self.facilitystr = self.facilitystr_map[facility]
+			syslog.openlog("pm_logconv", self.DEFAULT_LOGOPT, LOGFACILITY)
+			self.facilitystr = self.facilitystr_map[LOGFACILITY]
+			self.facility = LOGFACILITY
+			self.output_facility = None
 			return True
-		return False
+		except Exception, strerror:
+			print >> sys.stderr, "Error: set_facility() error occurred.", strerror
+			sys.exit(1)
+
+	def set_output_facility(self):
+		if self.output_facility == OUTPUT_LOGFACILITY:
+			return True
+		try:
+			syslog.closelog()
+			syslog.openlog("pm_logconv", self.DEFAULT_LOGOPT, OUTPUT_LOGFACILITY)
+			self.output_facility = OUTPUT_LOGFACILITY
+			self.facility = None
+			return True
+		except Exception, strerror:
+			print >> sys.stderr, "Error: set_output_facility() error occurred.", strerror
+			sys.exit(1)
 
 	def emerg(self, message):
-		if self.output == None or self.priority >= self.LOG_EMERG:
+		if self.priority >= self.LOG_EMERG:
 			return self.logging(self.LOG_EMERG, message)
 		return True
 
 	def alert(self, message):
-		if self.output == None or self.priority >= self.LOG_ALERT:
+		if self.priority >= self.LOG_ALERT:
 			return self.logging(self.LOG_ALERT, message)
 		return True
 
 	def crit(self, message):
-		if self.output == None or self.priority >= self.LOG_CRIT:
+		if self.priority >= self.LOG_CRIT:
 			return self.logging(self.LOG_CRIT, message)
 		return True
 
 	def error(self, message):
-		if self.output == None or self.priority >= self.LOG_ERR:
+		if self.priority >= self.LOG_ERR:
 			return self.logging(self.LOG_ERR, message)
 		return True
 
 	def warn(self, message):
-		if self.output == None or self.priority >= self.LOG_WARNING:
+		if self.priority >= self.LOG_WARNING:
 			return self.logging(self.LOG_WARNING, message)
 		return True
 
 	def notice(self, message):
-		if self.output == None or self.priority >= self.LOG_NOTICE:
+		if self.priority >= self.LOG_NOTICE:
 			return self.logging(self.LOG_NOTICE, message)
 		return True
 
 	def info(self, message):
-		if self.output == None or self.priority >= self.LOG_INFO:
+		if self.priority >= self.LOG_INFO:
 			return self.logging(self.LOG_INFO, message)
 		return True
 
 	def debug(self, message):
-		if self.output == None or self.priority >= self.LOG_DEBUG:
+		if self.priority >= self.LOG_DEBUG:
 			return self.logging(self.LOG_DEBUG, message)
 		return True
 
@@ -296,6 +316,7 @@ class LogconvLog:
 				return False
 
 			if self.output == None:
+				self.set_facility()
 				syslog.syslog(self.syspriority[priority], "[%d]: %8s %s" %
 					(self.pid, self.prioritystr[priority] + ':', message.rstrip()))
 			else:
@@ -504,7 +525,9 @@ class StatusFile:
 	'''
 	   write to status(reading ha-log's position and status of convert) file.
 	'''
-	def write(self):
+	def write(self, is_oneshot):
+		if is_oneshot:
+			return True
 		if cstat.IN_CALC:
 			if self.in_calc:
 				return True
@@ -541,17 +564,27 @@ class StatusFile:
 		self.in_calc = cstat.IN_CALC
 		return
 
+	def remove(self):
+		try:
+			if os.path.exists(self.path):
+				os.remove(self.path)
+			return True
+		except Exception, strerror:
+			pm_log.error("StatusFile.remove: I/O error occurred.")
+			pm_log.debug("StatusFile.remove: I/O error occurred. [%s]" % strerror)
+			return False
+
 statfile = None
 
 class ParseConfigFile:
 	'''
 		Initialization to parse config file.
-		Open the config file. Its fd should be close in __del__().
 	'''
-	def __init__(self, config_file):
+	def __init__(self):
 		self.SEC_SETTINGS = "Settings"
 		self.OPT_HA_LOG_PATH = "ha_log_path"
 		self.OPT_OUTPUT_PATH = "output_path"
+		self.OPT_OUTPUT_LOGFACILITY = "output_logfacility"
 		self.OPT_DATEFORMAT = "syslogformat"
 		self.OPT_MANAGE_ATTR = "attribute"
 		self.OPT_PATTERN = "pattern"
@@ -562,36 +595,46 @@ class ParseConfigFile:
 		self.OPT_IGNOREMSG = "ignoremsg"
 
 		self.OPT_LOGFACILITY = "logconv_logfacility"
-		self.logfacility = None
+		self.OPT_LOGPRIORITY = "logconv_logpriority"
 
 		self.OPT_ACTRSC = "act_rsc"
 
 		self.fp = None
-		self.cf = ConfigParser.RawConfigParser()
-		# open the config file to read.
-		if not os.path.exists(config_file):
-			pm_log.error("ParseConfigFile.__init__(): " +
-				"config file [%s] does not exist." % (config_file))
-			#__init__ should return None...
-			sys.exit(1)
-		try:
-			self.fp = open(config_file)
-			self.cf.readfp(self.fp)
-		except Exception, strerror:
-			pm_log.error("ParseConfigFile.__init__(): " +
-				"failed to read config file [%s]." % (config_file))
-			pm_log.debug("ParseConfigFile.__init__(): %s" % (strerror))
-			#__init__ should return None...
-			sys.exit(1)
+		self.cf = None
+		self.fp_sys = None
+		self.cf_sys = None
 
 	def __del__(self):
 		if self.fp is not None:
 			self.fp.close()
+		if self.fp_sys is not None:
+			self.fp_sys.close()
 
-	def get_optval(self, secname, optname):
+	'''
+		Open the config file. Its fd should be close in __del__().
+	'''
+	def open_config_file(self, config_file):
+		fp = None
+		cf = ConfigParser.RawConfigParser()
+		# open the config file to read.
+		if not os.path.exists(config_file):
+			pm_log.error("ParseConfigFile.open_config_file(): " +
+				"config file [%s] does not exist." % (config_file))
+			sys.exit(1)
+		try:
+			fp = open(config_file)
+			cf.readfp(fp)
+		except Exception, strerror:
+			pm_log.error("ParseConfigFile.open_config_file(): " +
+				"failed to read config file [%s]." % (config_file))
+			pm_log.debug("ParseConfigFile.open_config_file(): %s" % (strerror))
+			sys.exit(1)
+		return  fp, cf
+
+	def get_optval(self, cfobj, secname, optname):
 		optval = None
 		try:
-			optval = self.cf.get(secname, optname)
+			optval = cfobj.get(secname, optname)
 		except Exception, strerror:
 			pm_log.warn("get_optval(): " +
 				"failed to get value of \"%s\" in [%s] section. " %
@@ -611,14 +654,19 @@ class ParseConfigFile:
 		return 0   : succeeded.
 		       0 > : error occurs.
 	'''
-	def parse_basic_settings(self):
+	def parse_basic_settings(self, config_file):
 		global HA_LOGFILE
 		global OUTPUTFILE
+		global OUTPUT_LOGFACILITY
 		global SYSLOGFORMAT
 		global RESET_INTERVAL
 		global attrRuleList
 		global attrRules
 		global actRscList
+		global LOGFACILITY
+
+		# Open the user config file
+		self.fp, self.cf = self.open_config_file(config_file)
 
 		# Get all options in the section.
 		try:
@@ -629,7 +677,7 @@ class ParseConfigFile:
 			return (-1)
 
 		for optname in setting_opts:
-			optval = self.get_optval(self.SEC_SETTINGS, optname)
+			optval = self.get_optval(self.cf, self.SEC_SETTINGS, optname)
 			if not optval:
 				pm_log.warn("parse_basic_settings(): " +
 					"Ignore the setting of \"%s\"." % (optname))
@@ -638,7 +686,10 @@ class ParseConfigFile:
 			if optname == self.OPT_HA_LOG_PATH:
 				HA_LOGFILE = optval
 			elif optname == self.OPT_OUTPUT_PATH:
-				OUTPUTFILE = optval
+				if optval.lower() == "none":
+					OUTPUTFILE = None
+				else:
+					OUTPUTFILE = optval
 			elif optname == self.OPT_DATEFORMAT:
 				if optval.lower() == "true":
 					SYSLOGFORMAT = True
@@ -742,9 +793,23 @@ class ParseConfigFile:
 					attrRules.append(rule)
 					pm_log.debug("parse_basic_settings(): attrRules%s"%(attrRules))
 				continue # To the next option in [Settings].
+			elif optname == self.OPT_OUTPUT_LOGFACILITY:
+				if LogconvLog.facility_map.has_key(optval.lower()):
+					OUTPUT_LOGFACILITY = LogconvLog.facility_map[optval.lower()]
+				else:
+					pm_log.warn("parse_basic_settings(): " +
+						"the value of \"%s\" is invalid. " % (optname) +
+						"Ignore the setting.")
 			elif optname == self.OPT_LOGFACILITY:
 				if LogconvLog.facility_map.has_key(optval.lower()):
-					self.logfacility = LogconvLog.facility_map[optval.lower()]
+					LOGFACILITY = LogconvLog.facility_map[optval.lower()]
+				else:
+					pm_log.warn("parse_basic_settings(): " +
+						"the value of \"%s\" is invalid. " % (optname) +
+						"Ignore the setting.")
+			elif optname == self.OPT_LOGPRIORITY:
+				if optval.lower() in LogconvLog.prioritystr:
+					pm_log.set_priority(LogconvLog.prioritystr.index(optval.lower()))
 				else:
 					pm_log.warn("parse_basic_settings(): " +
 						"the value of \"%s\" is invalid. " % (optname) +
@@ -763,6 +828,8 @@ class ParseConfigFile:
 			# __if optname == xxx:
 		# __for optname in setting_opts:
 
+		if OUTPUTFILE == None and OUTPUT_LOGFACILITY == None:
+			pm_log.warn("parse_basic_settings(): no setting of output_path and output_logfacility.")
 		return 0
 
 	'''
@@ -770,13 +837,18 @@ class ParseConfigFile:
 		return 0   : succeeded.
 		       0 > : error occurs.
 	'''
-	def parse_logconv_settings(self):
-		logconv_sections = self.cf.sections()
+	def parse_logconv_settings(self, config_file):
+		# Open the system config file
+		self.fp_sys, self.cf_sys = self.open_config_file(config_file)
+
+		logconv_sections = self.cf_sys.sections()
 		try:
 			logconv_sections.remove(self.SEC_SETTINGS)
+			pm_log.debug("parse_logconv_settings(): " +
+				"[%s] section exists in [%s] (ignored). " %
+					(self.SEC_SETTINGS, SYSCONFIGFILE))
 		except:
-			pm_log.warn("parse_logconv_settings(): " +
-				"[%s] section does not exist. " % (self.SEC_SETTINGS))
+			pass
 
 		#
 		# Parse each section.
@@ -784,7 +856,7 @@ class ParseConfigFile:
 		for secname in logconv_sections:
 			# Get all options in the section.
 			try:
-				logconv_opts = self.cf.options(secname)
+				logconv_opts = self.cf_sys.options(secname)
 			except:
 				pm_log.warn("parse_logconv_settings(): " +
 					"[%s] section does not exist. " % (secname) +
@@ -794,7 +866,7 @@ class ParseConfigFile:
 			lconvfrm = LogconvFrame()
 			lconvfrm.rulename = secname
 			for optname in logconv_opts:
-				optval = self.get_optval(secname, optname)
+				optval = self.get_optval(self.cf_sys, secname, optname)
 				if not optval:
 					pm_log.warn("parse_logconv_settings(): " +
 						"Ignore the setting of \"%s\"." % (optname))
@@ -927,8 +999,6 @@ class LogConvert:
 		self.daemonize = False
 		self.stop_logconv = False
 		self.ask_status = False
-		self.is_continue = False
-		self.is_present = False
 		self.is_oneshot = False
 		self.configfile = CONFIGFILE
 		now = datetime.datetime.now()
@@ -942,9 +1012,9 @@ class LogConvert:
 		if not self.parse_args():
 			sys.exit(1)
 
-		pm_log.debug("option: daemon[%d], stop[%d], status[%d], continue[%d], " \
-			"present[%d], oneshot[%d], config[%s], facility[%s]" % (self.daemonize, self.stop_logconv,
-			self.ask_status, self.is_continue, self.is_present, self.is_oneshot, self.configfile, pm_log.facilitystr))
+		pm_log.debug("option: daemon[%d], stop[%d], status[%d], oneshot[%d], " \
+			"config[%s], facility[%s]" % (self.daemonize, self.stop_logconv,
+			self.ask_status, self.is_oneshot, self.configfile, pm_log.facilitystr))
 		if not self.stop_logconv and not self.ask_status:
 			pm_log.debug("option: target[%s], output[%s], syslogfmt[%s], reset_interval[%d], actrsc%s" % (HA_LOGFILE, OUTPUTFILE, SYSLOGFORMAT, RESET_INTERVAL, actRscList))
 
@@ -969,12 +1039,8 @@ class LogConvert:
 			default=False, help="stop the pm_logconv if it is already running")
 		psr.add_option("-s", action="store_true", dest="ask_status",
 			default=False, help="return pm_logconv status")
-		psr.add_option("-c", action="store_true", dest="is_continue",
-			default=False, help="start with a continuous mode (\"-p\" or \"-o\" option is mutually exclusive)")
-		psr.add_option("-p", action="store_true", dest="is_present",
-			default=False, help="start with a present mode    (\"-c\" or \"-o\" option is mutually exclusive)")
 		psr.add_option("-o", action="store_true", dest="is_oneshot",
-			default=False, help="start with a oneshot mode    (\"-c\" or \"-p\" option is mutually exclusive)")
+			default=False, help="start with a oneshot mode")
 		psr.add_option("-f", dest="config_file", default=CONFIGFILE,
 			help="the specified configuration file is used")
 		psr.add_option("-v", "--version", action="callback", callback=print_version,
@@ -990,20 +1056,17 @@ class LogConvert:
 		self.daemonize = opts.daemonize
 		self.stop_logconv = opts.stop_logconv
 		self.ask_status = opts.ask_status
-		self.is_continue = opts.is_continue
-		self.is_present = opts.is_present
 		self.is_oneshot = opts.is_oneshot
 		self.configfile = opts.config_file
 
 		'''
 			Parse config file.
 		'''
-		pcfobj = ParseConfigFile(self.configfile)
+		pcfobj = ParseConfigFile()
 		# Parse pm_logconv's basic settings.
-		pcfobj.parse_basic_settings()
+		pcfobj.parse_basic_settings(self.configfile)
 
-		if pcfobj.logfacility != None:
-			pm_log.set_facility(pcfobj.logfacility)
+		if LOGFACILITY != pm_log.DEFAULT_FACILITY:
 			pm_log.info("starting... [%s]" % args[:len(args)-1])
 
 		# check command line option.
@@ -1016,40 +1079,16 @@ class LogConvert:
 						"and -s cannot be specified at the same time.")
 					return False
 
-		if (self.stop_logconv or self.ask_status) and self.is_continue:
-			pm_log.error("parse_args: option -k and -s cannot be specified with -c.")
-			return False
-
-		if (self.stop_logconv or self.ask_status) and self.is_present:
-			pm_log.error("parse_args: option -k and -s cannot be specified with -p.")
-			return False
-
 		if (self.stop_logconv or self.ask_status) and self.is_oneshot:
 			pm_log.error("parse_args: option -k and -s cannot be specified with -o.")
 			return False
-
-		if \
-			(self.is_continue and self.is_present) or \
-			(self.is_continue and self.is_oneshot) or \
-			(self.is_present  and self.is_oneshot):
-			pm_log.error("parse_args: options -c ,-p and -o are mutually exclusive.")
-			return False
-
-		if not self.is_continue and not self.is_present and not self.is_oneshot:
-			# check Corosync active or dead.
-			ret = self.funcs.is_corosync()
-			if ret == None:
-				return False
-			elif ret:
-				self.is_continue = True
-			else:
-				self.is_present = True
 
 		# check file path. isn't the same path specified?
 		try:
 			fileList = list()
 			if not self.stop_logconv and not self.ask_status:
-				fileList.append((OUTPUTFILE, "output file for converted message"))
+				if OUTPUTFILE != None:
+					fileList.append((OUTPUTFILE, "output file for converted message"))
 				fileList.append((HA_LOGFILE, "Pacemaker and Corosync log file"))
 				fileList.append((self.STATFILE,
 					"pm_logconv's status file (can't specify by user)"))
@@ -1074,7 +1113,7 @@ class LogConvert:
 
 		if not self.stop_logconv and not self.ask_status:
 			# Parse settings for log convertion.
-			pcfobj.parse_logconv_settings()
+			pcfobj.parse_logconv_settings(SYSCONFIGFILE)
 		return True
 
 	'''
@@ -1183,11 +1222,8 @@ class LogConvert:
 	'''
 	def get_fd(self, statfile):
 		try:
-			if self.is_continue:
-				if statfile.read() and cstat.ino == 0:
-					pm_log.error("get_fd: status file doesn't exist.")
-
-				if cstat.ino > 0:
+			if not self.is_oneshot:
+				if statfile.read() and cstat.ino > 0:
 					if os.path.exists(HA_LOGFILE) and \
 						cstat.ino == os.stat(HA_LOGFILE)[ST_INO]:
 						log = HA_LOGFILE
@@ -1221,7 +1257,7 @@ class LogConvert:
 
 			if os.path.exists(HA_LOGFILE):
 				f = open(HA_LOGFILE, 'r')
-				if self.is_present:
+				if not self.is_oneshot:
 					f.seek(os.fstat(f.fileno()).st_size)
 			else:
 				while not os.path.exists(HA_LOGFILE):
@@ -1329,7 +1365,7 @@ class LogConvert:
 			self.funcs.clear_status()
 			pm_log.debug("check_dc_and_reset(): " +
 					"reset log convert status complete.")
-			if statfile: statfile.write()
+			if statfile: statfile.write(self.is_oneshot)
 		elif ret == False:
 			pm_log.debug("check_dc_and_reset(): DC node is not idle. " +
 				"Avoid to reset log convert status.")
@@ -1501,7 +1537,7 @@ class LogConvert:
 
 					if cstat.ino != statfile.w_ino or \
 						cstat.offset != statfile.w_offset:
-						statfile.write()
+						statfile.write(self.is_oneshot)
 
 					if os.fstat(logfile.fileno()).st_size < cstat.offset:
 						pm_log.warn("convert: there is possibility that " \
@@ -1512,7 +1548,7 @@ class LogConvert:
 						logfile.seek(0)
 						cstat.offset = 0
 						self.funcs.clear_status()
-						statfile.write()
+						statfile.write(self.is_oneshot)
 
 					if os.path.exists(HA_LOGFILE) and \
 						cstat.ino == os.stat(HA_LOGFILE)[ST_INO]:
@@ -1536,7 +1572,7 @@ class LogConvert:
 					cstat.ino = os.fstat(logfile.fileno()).st_ino
 				else:
 					self.do_ptn_matching(logline.replace('#011', ' '))
-					statfile.write()
+					statfile.write(self.is_oneshot)
 		except Exception, strerror:
 			pm_log.error("convert: error occurred.")
 			pm_log.debug("convert: error occurred. [%s]" % strerror)
@@ -1568,7 +1604,9 @@ class LogConvert:
 		time.sleep(1)
 		pm_log.info("started: pid[%d], ppid[%d], pgid[%d]"
 			% (os.getpid(), os.getppid(), os.getpgrp()))
-		return self.convert()
+		ret = self.convert()
+		if not self.is_oneshot and ret == 0: statfile.remove()
+		return ret
 
 class LogElements:
 	def __init__(self, procname=None, datestr=None,
@@ -1716,13 +1754,17 @@ class OutputConvertedLog:
 		output_logmsg = self.orglogmsg
 		if convlogmsg != None:
 			output_logmsg = convlogmsg
+		outputstr = ("%7s: %s" % (output_loglevel, output_logmsg.rstrip()))
 
 		try:
-			outputstr = ("%s %s %7s: %s" %
-				(self.datestr, HOSTNAME, output_loglevel, output_logmsg))
-			f = open(OUTPUTFILE, 'a')
-			f.write("%s\n" % (outputstr))
-			f.close()
+			if OUTPUT_LOGFACILITY != None:
+				pm_log.set_output_facility()
+				syslog.syslog(LogConvertFuncs.loglevel_map[output_loglevel], outputstr)
+			if OUTPUTFILE != None:
+				outputstr = ("%s %s %s" % (self.datestr, HOSTNAME, outputstr))
+				f = open(OUTPUTFILE, 'a')
+				f.write("%s\n" % (outputstr))
+				f.close()
 		except Exception, strerror:
 			pm_log.error("output_log(): " +
 				"failed to output converted log message. [%s]" %
@@ -1870,30 +1912,19 @@ class LogConvertFuncs:
 	LOG_INFO_LV  = "info"
 	LOG_DEBUG_LV = "debug"
 
+	loglevel_map = {
+		LOG_ERR_LV:	syslog.LOG_ERR,
+		LOG_WARN_LV:	syslog.LOG_WARNING,
+		LOG_INFO_LV:	syslog.LOG_INFO,
+		LOG_DEBUG_LV:	syslog.LOG_DEBUG,
+	}
+
 	def __init__(self, rscstatList=None):
 		# This list is used only in F/O process.
 		# If hg_logconv exits abnormally during parsing F/O process's log,
 		# read from start of F/O, so it doesn't need to output status file.
 		self.rscstatList = rscstatList
 		self.rscstatList = list()
-
-	'''
-		Check Corosync service is active or dead.
-		return: True  -> active
-				False -> dead
-				None  -> error occurs.
-	'''
-	def is_corosync(self):
-		# Get DC node name.
-		status = self.exec_outside_cmd("service", "corosync status", False)[0]
-		if status == None:
-			# Failed to exec command.
-			pm_log.warn("is_corosync(): failed to get status.")
-			return None
-		if status != 0:
-			# Maybe during DC election.
-			return False
-		return True
 
 	'''
 		triming mark from value.
@@ -2471,10 +2502,6 @@ class LogConvertFuncs:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, op):
 			return CONV_ITEM_EMPTY
-
-		# remove from timed out rscop list.
-		# Because it became clear that the operation timed out.
-		rscid_and_op = ("%s:%s" % (rscid, op))
 
 		convertedlog = ("Resource %s failed to %s. (Timed Out)" % (rscid, op))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
