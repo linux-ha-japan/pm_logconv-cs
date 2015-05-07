@@ -588,7 +588,6 @@ class ParseConfigFile:
 		self.OPT_DATEFORMAT = "syslogformat"
 		self.OPT_MANAGE_ATTR = "attribute"
 		self.OPT_PATTERN = "pattern"
-		self.OPT_RESET_INTERVAL = "reset_interval"
 		self.OPT_FUNCNAME = "func"
 		self.OPT_LOGLEVEL = "loglevel"
 		self.OPT_FOTRIGGER = "fotrigger"
@@ -699,18 +698,6 @@ class ParseConfigFile:
 					pm_log.warn("parse_basic_settings(): " +
 						"the value of \"%s\" is invalid. " % (optname) +
 						"Ignore the setting.")
-			elif optname == self.OPT_RESET_INTERVAL:
-				try:
-					tmpval = int(optval)
-					# 1 to 32bit integer max value
-					if tmpval > 0 and tmpval <= 2147483647:
-						RESET_INTERVAL = tmpval
-					else:
-						raise
-				except:
-					pm_log.warn("parse_basic_settings(): " +
-						"the value of \"%s\" is invalid. " % (optname) +
-						"set an default value(60).")
 			elif optname.startswith(self.OPT_MANAGE_ATTR) and optval.count(','):
 				attrRule = optval.split(',')
 				if len(attrRule) != 3:
@@ -1007,7 +994,6 @@ class LogConvert:
 
 		# Get obj of functions to convert log.
 		self.funcs = LogConvertFuncs()
-		signal.signal(signal.SIGUSR1, self.check_dc_and_reset)
 
 		if not self.parse_args():
 			sys.exit(1)
@@ -1016,7 +1002,7 @@ class LogConvert:
 			"config[%s], facility[%s]" % (self.daemonize, self.stop_logconv,
 			self.ask_status, self.is_oneshot, self.configfile, pm_log.facilitystr))
 		if not self.stop_logconv and not self.ask_status:
-			pm_log.debug("option: target[%s], output[%s], syslogfmt[%s], reset_interval[%d], actrsc%s" % (HA_LOGFILE, OUTPUTFILE, SYSLOGFORMAT, RESET_INTERVAL, actRscList))
+			pm_log.debug("option: target[%s], output[%s], syslogfmt[%s], actrsc%s" % (HA_LOGFILE, OUTPUTFILE, SYSLOGFORMAT, actRscList))
 
 	'''
 	   PID and status(read position of ha-log and status of convert) file path
@@ -1302,79 +1288,6 @@ class LogConvert:
 		return None
 
 	'''
-		Check DC node is idle or not with crmadmin command.
-		When DC is idle, crmadmin returns "S_IDLE" status.
-		return: True  -> local is idle.
-		        False -> local is not idle or not DC.
-		        None  -> error occurs.
-		                 cannot execute command or maybe during DC election.
-	'''
-	def is_idle(self):
-		# Connection timeout (ms).
-		# crmadmin command's default value is 30sec.
-		TIMEOUT = 30 * 1000
-
-		# Get DC status.
-		options = ("-S %s -t %s" % (HOSTNAME, TIMEOUT))
-		(status, output) = \
-			self.funcs.exec_outside_cmd(CMD_CRMADMIN, options, False)
-		if status == None:
-			# Failed to exec command.
-			pm_log.warn("is_idle(): failed to get local node status.")
-			return None
-		if status != 0:
-			# Maybe during DC election.
-			return False
-		try:
-			dcstat = output.split()[-2]
-		except:
-			# Failed to parse output strings.
-			pm_log.warn("is_idle(): failed to parse output strings." +
-				"local node status")
-			return None
-		if dcstat == "S_IDLE" or dcstat == "S_NOT_DC":
-			return True
-		return False
-
-	'''
-		Reset log convert status when Pacemaker doesn't output any log message
-		over RESET_INTERVAL sec.
-		Before reset process, check whether DC node is idle or not.
-		arg1 : signal number. for use this func as signal handler.
-		arg2 : stac frame. for use this func as signal handler.
-		return nothing.
-	'''
-	def check_dc_and_reset(self, signum, frame):
-		if signum == None:
-			now = datetime.datetime.now()
-			if ((self.last_logoutput_t +
-					datetime.timedelta(seconds=RESET_INTERVAL)) > now) or \
-				((self.last_reset_t +
-					datetime.timedelta(seconds=RESET_INTERVAL)) > now):
-				return
-		if signum == None:
-			self.last_reset_t = datetime.datetime.now()
-		pm_log.debug("check_dc_and_reset(): try to reset log convert status.")
-		self.funcs.debug_status()
-		if self.funcs.is_init_status() == True:
-			pm_log.debug("check_dc_and_reset(): log convert status is initial value. " +
-				"Avoid to reset log convert status.")
-			return
-		ret = self.is_idle()
-		if ret == True:
-			self.funcs.clear_status()
-			pm_log.debug("check_dc_and_reset(): " +
-					"reset log convert status complete.")
-			if statfile: statfile.write(self.is_oneshot)
-		elif ret == False:
-			pm_log.debug("check_dc_and_reset(): DC node is not idle. " +
-				"Avoid to reset log convert status.")
-		elif ret == None:
-			pm_log.error("check_dc_and_reset(): failed to check DC status. " +
-				"Avoid to reset log convert status.")
-		return
-
-	'''
 		Check a line of log message matched or not matched with each re-objects.
 		NOTE: pattern strings which are written in a line (in a option which is
 		      named "pattern*") are treated as "AND condition".
@@ -1532,8 +1445,6 @@ class LogConvert:
 					if self.is_oneshot:
 						logfile.close()
 						return 0
-
-					self.check_dc_and_reset(None, None)
 
 					if cstat.ino != statfile.w_ino or \
 						cstat.offset != statfile.w_offset:
