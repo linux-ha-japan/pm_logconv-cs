@@ -1192,7 +1192,7 @@ class LogConvert:
 	   get file descriptor which matched the contents of the status file
 	   (read position of ha-log).
 	'''
-	def get_fd(self, statfile):
+	def get_fd(self):
 		try:
 			if not self.is_oneshot:
 				if statfile.read() and cstat.ino > 0:
@@ -1252,7 +1252,7 @@ class LogConvert:
 	'''
 	   get the Pacemaker and Corosync log path, when `logrotate` occurs.
 	'''
-	def get_nextlog(self, ino, statfile):
+	def get_nextlog(self, ino):
 		try:
 			for log in glob.glob(HA_LOGFILE + "?*"):
 				pm_log.debug("get_nextlog: searching previous target[%s(inode:%d)]"
@@ -1405,7 +1405,7 @@ class LogConvert:
 		global statfile
 		try:
 			statfile = StatusFile(self.STATFILE)
-			logfile = self.get_fd(statfile)
+			logfile = self.get_fd()
 			if logfile == None:
 				if do_shutdown:
 					return 0
@@ -1445,7 +1445,7 @@ class LogConvert:
 						continue
 					logfile.close()
 
-					path = self.get_nextlog(cstat.ino, statfile)
+					path = self.get_nextlog(cstat.ino)
 					if path == None:
 						path = HA_LOGFILE
 						while not os.path.exists(path):
