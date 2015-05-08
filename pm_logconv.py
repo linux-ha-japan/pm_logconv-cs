@@ -1334,8 +1334,8 @@ class LogConvert:
 
 				# Call specified function.
 				try:
-					pm_log.debug("do_ptn_matching(): execute %s()." %
-						(lconvfrm.func))
+					pm_log.debug("do_ptn_matching(): execute %s() for logline [%s]." %
+						(lconvfrm.func, logline))
 					ret = getattr(self.funcs, lconvfrm.func)(\
 						outputobj, logelm, lconvfrm)
 				except Exception, strerror:
