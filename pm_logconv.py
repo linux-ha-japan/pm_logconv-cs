@@ -53,11 +53,6 @@ OUTPUT_LOGFACILITY = None
 SYSLOGFORMAT = True
 LOGFACILITY = None
 
-#
-# Timeout(ms) for reset log convert status.
-#
-RESET_INTERVAL = 60
-
 # A flag of failer status
 # resource failer 1(resource error)
 # score    failer 2(pingd rsclocation)
@@ -102,11 +97,6 @@ lconvRuleList = list()
 # shutdown flag, when SIGINT or SIGTERM signal is received, set it True.
 #
 do_shutdown = False
-
-#
-# command name for getting DC node status.
-#
-CMD_CRMADMIN = "crmadmin"
 
 #
 # output version number of pm_logconv and exit.
@@ -658,7 +648,6 @@ class ParseConfigFile:
 		global OUTPUTFILE
 		global OUTPUT_LOGFACILITY
 		global SYSLOGFORMAT
-		global RESET_INTERVAL
 		global attrRuleList
 		global attrRules
 		global actRscList
