@@ -977,9 +977,6 @@ class LogConvert:
 		self.ask_status = False
 		self.is_oneshot = False
 		self.configfile = CONFIGFILE
-		now = datetime.datetime.now()
-		self.last_logoutput_t = now
-		self.last_reset_t = now
 
 		# Get obj of functions to convert log.
 		self.funcs = LogConvertFuncs()
@@ -1321,7 +1318,6 @@ class LogConvert:
 		return nothing
 	'''
 	def do_ptn_matching(self, logline):
-		setdate = True
 		for lconvfrm in lconvRuleList:
 			matched = self.is_matched(logline, lconvfrm)
 			if matched == True:
@@ -1329,8 +1325,6 @@ class LogConvert:
 				if logelm.parse_logmsg(logline, self.funcs) != 0:
 					pm_log.error("do_ptn_matching(): " +
 						"failed to parse log message. [%s]" % (logline))
-					# Set the time of output log message for auto reset.
-					self.last_logoutput_t = datetime.datetime.now()
 					return # Break off converting this log message.
 				# Set original date string and log level.
 				outputobj = OutputConvertedLog()
@@ -1374,8 +1368,6 @@ class LogConvert:
 							(cstat.FAILURE_OCCURRED == FAIL_NODE  and cstat.ACTRSC_MOVE == FAIL_STP)  or \
 							(cstat.FAILURE_OCCURRED == FAIL_NODE  and cstat.ACTRSC_MOVE == FAIL_STPD):
 							self.funcs.detect_fo_start(outputobj)
-					if lconvfrm.ignoremsg:
-						setdate = False
 				else:
 					if ret == CONV_PARSE_ERROR:
 						errmsg = ("%s(): " % (lconvfrm.func) +
@@ -1404,10 +1396,6 @@ class LogConvert:
 				# Not matched.
 				pass
 		#__for lconvfrm in lconvRuleList: (check next rule)
-
-		# Set the time of output log message for auto reset.
-		if setdate:
-			self.last_logoutput_t = datetime.datetime.now()
 		return
 
 	'''
