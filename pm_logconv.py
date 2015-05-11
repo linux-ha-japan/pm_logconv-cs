@@ -581,7 +581,6 @@ class ParseConfigFile:
 		self.OPT_FUNCNAME = "func"
 		self.OPT_LOGLEVEL = "loglevel"
 		self.OPT_FOTRIGGER = "fotrigger"
-		self.OPT_IGNOREMSG = "ignoremsg"
 
 		self.OPT_LOGFACILITY = "logconv_logfacility"
 		self.OPT_LOGPRIORITY = "logconv_logpriority"
@@ -860,15 +859,6 @@ class ParseConfigFile:
 					lconvfrm.loglevel = optval
 				elif optname == self.OPT_FOTRIGGER:
 						lconvfrm.fotrigger = optval
-				elif optname == self.OPT_IGNOREMSG:
-					if optval.lower() == "true":
-						lconvfrm.ignoremsg = True
-					elif optval.lower() == "false":
-						lconvfrm.ignoremsg = False
-					else:
-						pm_log.warn("parse_logconv_settings(): " +
-							"the value of \"%s\" is invalid. " % (optname) +
-							"Ignore the setting.")
 				elif optname.startswith(self.OPT_PATTERN):
 					pstrList = list()
 					tmpList = list()
@@ -943,18 +933,15 @@ class LogconvFrame:
 		func     : function name to convert log message which matches the rule.
 		loglevel : log level of converted log.
 		fotrigger: the log message is trigger of F/O or not. [True|False]
-		ignoremsg: wheter set the time of output log message for auto reset
-		           function. [True|False]
 	'''
 	def __init__(self, rulename=None, ptnList=None, func=None, loglevel=None,
-		fotrigger=False, ignoremsg=False):
+		fotrigger=False):
 		self.rulename = rulename
 		self.ptnList = ptnList
 		self.ptnList = list()
 		self.func = func
 		self.loglevel = loglevel
 		self.fotrigger = fotrigger
-		self.ignoremsg = ignoremsg
 
 	'''
 		Only for debug.
@@ -965,7 +952,6 @@ class LogconvFrame:
 		print self.func
 		print self.loglevel
 		print self.fotrigger
-		print self.ignoremsg
 
 class LogConvert:
 	PIDFILE = "/var/run/pm_logconv.pid"
