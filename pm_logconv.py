@@ -1318,6 +1318,7 @@ class LogConvert:
 		return nothing
 	'''
 	def do_ptn_matching(self, logline):
+		already_debug = False
 		for lconvfrm in lconvRuleList:
 			matched = self.is_matched(logline, lconvfrm)
 			if matched == True:
@@ -1334,8 +1335,9 @@ class LogConvert:
 
 				# Call specified function.
 				try:
-					pm_log.debug("do_ptn_matching(): execute %s() for logline [%s]." %
-						(lconvfrm.func, logline))
+					pm_log.debug("do_ptn_matching(): execute %s() [%s]" %
+						(lconvfrm.func, logline.replace('\n', '')))
+					already_debug = True
 					ret = getattr(self.funcs, lconvfrm.func)(\
 						outputobj, logelm, lconvfrm)
 				except Exception, strerror:
@@ -1396,6 +1398,8 @@ class LogConvert:
 				# Not matched.
 				pass
 		#__for lconvfrm in lconvRuleList: (check next rule)
+		if not already_debug:
+			pm_log.debug("do_ptn_matching(): Not execute [%s]"%(logline.replace('\n', '')))
 		return
 
 	'''
@@ -1523,7 +1527,6 @@ class LogElements:
 			elementList = logline.split()
 			if elementList[0].isalpha():
 				# Case of syslogmsgfmt = True (default)
-				pm_log.debug("parse log message as syslog format.")
 				self.datestr = ' '.join(\
 					elementList[SYSFMT_DATE_START_POS:SYSFMT_DATE_END_POS])
 				# The following are examples of parsing:
@@ -1673,7 +1676,6 @@ class OutputConvertedLog:
 		DAY_POS = 2   #DD
 
 		if orgdatestr.split()[0].isalpha():
-			pm_log.debug("It seems already syslog date format.")
 			return orgdatestr
 
 		try:
