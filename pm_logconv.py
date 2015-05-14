@@ -2605,18 +2605,18 @@ class LogConvertFuncs:
 		return CONV_OK
 
 	'''
-		Convert log message which means respawn process killed by signal.
+		Convert log message which means child process killed by signal.
 
 		MsgNo.10-3)
-			Jan  1 00:00:00 node01 pacemakerd[777]:   notice: pcmk_child_exit: 
-			Child process cib terminated with signal 9 (pid=888, core=0)
+			Jan  1 00:00:00 node01 pacemakerd[1692]: warning: pcmk_child_exit: 
+			The cib process (1693) terminated with signal 9 (core=0)
 	'''
 	def respawn_killed(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			procname = wordlist[-7]
-			signum = wordlist[-3]
-			pid = self.trimmark(wordlist[-2],"=").split("=")[1]
+			procname = wordlist[wordlist.index("process") - 1]
+			signum = wordlist[wordlist.index("signal") + 1]
+			pid = self.trimmark(wordlist[wordlist.index("process") + 1])
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(procname, pid, signum):
