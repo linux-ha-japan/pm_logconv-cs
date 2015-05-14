@@ -2583,17 +2583,17 @@ class LogConvertFuncs:
 		return CONV_OK
 
 	'''
-		Convert log message which means respawn process exited with error.
+		Convert log message which means child process exited with error.
 
 		MsgNo.10-2)
-			Jan  1 00:00:00 node01 pacemakerd[777]:    error: pcmk_child_exit: 
-			Child process crmd (888) exited: Generic Pacemaker error (201)
+			Jan  1 00:00:00 node01 pacemakerd[2843]: error: pcmk_child_exit: 
+			The crmd process (2964) exited: Generic Pacemaker error (201)
 	'''
 	def respawn_exited_abnormally(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			procname = wordlist[wordlist.index("process") + 1]
-			pid = self.trimmark(wordlist[wordlist.index("process") + 2])
+			procname = wordlist[wordlist.index("process") - 1]
+			pid = self.trimmark(wordlist[wordlist.index("process") + 1])
 			exitcode = self.trimmark(wordlist[-1])
 		except:
 			return CONV_PARSE_ERROR
