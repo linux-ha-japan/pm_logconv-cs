@@ -2627,17 +2627,17 @@ class LogConvertFuncs:
 		return CONV_OK
 
 	'''
-		Convert log message which means respawn process exited normally in shutdown process.
+		Convert log message which means child process exited normally in shutdown process.
 
 		MsgNo.10-6)
-			Jan  1 00:00:00 node01 pacemakerd[777]:     info: 
-			pcmk_child_exit: Child process cib (888) exited: OK (0)
+			Jan  1 00:00:00 node01 pacemakerd[1692]: info: pcmk_child_exit: 
+			The cib process (1693) exited: OK (0)
 	'''
 	def respawn_exited_normally(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			procname = wordlist[wordlist.index("process") + 1]
-			pid = self.trimmark(wordlist[wordlist.index("process") + 2])
+			procname = wordlist[wordlist.index("process") - 1]
+			pid = self.trimmark(wordlist[wordlist.index("process") + 1])
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(procname, pid):
