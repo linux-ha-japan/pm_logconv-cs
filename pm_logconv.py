@@ -2588,13 +2588,24 @@ class LogConvertFuncs:
 		MsgNo.10-2)
 			Jan  1 00:00:00 node01 pacemakerd[2843]: error: pcmk_child_exit: 
 			The crmd process (2964) exited: Generic Pacemaker error (201)
+		MsgNo.10-4)
+			Jan  1 00:00:00 node01 pacemakerd[2843]: warning: pcmk_child_exit: 
+			The crmd process (2964) can no longer be respawned, shutting the cluster down.
+		MsgNo.10-5)
+			Jan  1 00:00:00 node01 pacemakerd[2843]: emerg: pcmk_child_exit: 
+			The stonith-ng process (2960) instructed the machine to reset
 	'''
 	def respawn_exited_abnormally(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
 			procname = wordlist[wordlist.index("process") - 1]
 			pid = self.trimmark(wordlist[wordlist.index("process") + 1])
-			exitcode = self.trimmark(wordlist[-1])
+			if logelm.halogmsg.count("can no longer be respawned"):
+				exitcode = 100
+			elif logelm.halogmsg.count("instructed the machine to reset"):
+				exitcode = 255
+			else:
+				exitcode = self.trimmark(wordlist[-1])
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(procname, pid, exitcode):
