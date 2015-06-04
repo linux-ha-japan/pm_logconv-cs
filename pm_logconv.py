@@ -2583,18 +2583,29 @@ class LogConvertFuncs:
 		return CONV_OK
 
 	'''
-		Convert log message which means respawn process exited with error.
+		Convert log message which means child process exited with error.
 
 		MsgNo.10-2)
-			Jan  1 00:00:00 node01 pacemakerd[777]:    error: pcmk_child_exit: 
-			Child process crmd (888) exited: Generic Pacemaker error (201)
+			Jan  1 00:00:00 node01 pacemakerd[2843]: error: pcmk_child_exit: 
+			The crmd process (2964) exited: Generic Pacemaker error (201)
+		MsgNo.10-4)
+			Jan  1 00:00:00 node01 pacemakerd[2843]: warning: pcmk_child_exit: 
+			The crmd process (2964) can no longer be respawned, shutting the cluster down.
+		MsgNo.10-5)
+			Jan  1 00:00:00 node01 pacemakerd[2843]: emerg: pcmk_child_exit: 
+			The stonith-ng process (2960) instructed the machine to reset
 	'''
 	def respawn_exited_abnormally(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			procname = wordlist[wordlist.index("process") + 1]
-			pid = self.trimmark(wordlist[wordlist.index("process") + 2])
-			exitcode = self.trimmark(wordlist[-1])
+			procname = wordlist[wordlist.index("process") - 1]
+			pid = self.trimmark(wordlist[wordlist.index("process") + 1])
+			if logelm.halogmsg.count("can no longer be respawned"):
+				exitcode = 100
+			elif logelm.halogmsg.count("instructed the machine to reset"):
+				exitcode = 255
+			else:
+				exitcode = self.trimmark(wordlist[-1])
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(procname, pid, exitcode):
@@ -2605,18 +2616,18 @@ class LogConvertFuncs:
 		return CONV_OK
 
 	'''
-		Convert log message which means respawn process killed by signal.
+		Convert log message which means child process killed by signal.
 
 		MsgNo.10-3)
-			Jan  1 00:00:00 node01 pacemakerd[777]:   notice: pcmk_child_exit: 
-			Child process cib terminated with signal 9 (pid=888, core=0)
+			Jan  1 00:00:00 node01 pacemakerd[1692]: warning: pcmk_child_exit: 
+			The cib process (1693) terminated with signal 9 (core=0)
 	'''
 	def respawn_killed(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			procname = wordlist[-7]
-			signum = wordlist[-3]
-			pid = self.trimmark(wordlist[-2],"=").split("=")[1]
+			procname = wordlist[wordlist.index("process") - 1]
+			signum = wordlist[wordlist.index("signal") + 1]
+			pid = self.trimmark(wordlist[wordlist.index("process") + 1])
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(procname, pid, signum):
@@ -2627,17 +2638,17 @@ class LogConvertFuncs:
 		return CONV_OK
 
 	'''
-		Convert log message which means respawn process exited normally in shutdown process.
+		Convert log message which means child process exited normally in shutdown process.
 
 		MsgNo.10-6)
-			Jan  1 00:00:00 node01 pacemakerd[777]:     info: 
-			pcmk_child_exit: Child process cib (888) exited: OK (0)
+			Jan  1 00:00:00 node01 pacemakerd[1692]: info: pcmk_child_exit: 
+			The cib process (1693) exited: OK (0)
 	'''
 	def respawn_exited_normally(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			procname = wordlist[wordlist.index("process") + 1]
-			pid = self.trimmark(wordlist[wordlist.index("process") + 2])
+			procname = wordlist[wordlist.index("process") - 1]
+			pid = self.trimmark(wordlist[wordlist.index("process") + 1])
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(procname, pid):
