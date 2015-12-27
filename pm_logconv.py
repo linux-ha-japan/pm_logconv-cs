@@ -3145,11 +3145,11 @@ class LogConvertFuncs:
 	def exec_st_device_started(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			by_node = wordlist[2]
-			op = wordlist[5]
-			for_node = wordlist[6]
+			by_node = self.trimmark(wordlist[2])
+			op = self.trimmark(wordlist[6])
+			for_node = self.trimmark(wordlist[5])
 			if wordlist[7] == "with":
-				rsc = " " + wordlist[8]
+				rsc = " " + self.trimmark(wordlist[8])
 			else:
 				rsc = ""
 
