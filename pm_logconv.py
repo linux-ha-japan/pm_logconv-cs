@@ -2202,7 +2202,7 @@ class LogConvertFuncs:
 		try:
 			# In the case of example above, tmp's value is
 			# "op=master_slave_Stateful0:1_promote_0".
-			tmp = logelm.halogmsg.split()[3]
+			tmp = logelm.halogmsg.split()[2]
 			# remove "op=" at the head.
 			opid = tmp[3:]
 			rscid, op = self.parse_opid(opid)[:2]
@@ -2265,8 +2265,8 @@ class LogConvertFuncs:
 		}
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid, op = self.parse_opid(wordlist[2])[:2]
-			rcstr = self.trimmark(wordlist[6],"=")
+			rscid, op = self.parse_opid(wordlist[1])[:2]
+			rcstr = self.trimmark(wordlist[5],"=")
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, op, rcstr):
@@ -2326,7 +2326,7 @@ class LogConvertFuncs:
 	def operation_failed(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid, op = self.parse_opid(wordlist[2])[:2]
+			rscid, op = self.parse_opid(wordlist[1])[:2]
 			idx = logelm.halogmsg.find("rc=")
 			if idx == -1:
 				idx = logelm.halogmsg.find("status=")
@@ -2369,7 +2369,7 @@ class LogConvertFuncs:
 	'''
 	def operation_timedout_ocf(self, outputobj, logelm, lconvfrm):
 		try:
-			opid = logelm.halogmsg.split()[2]
+			opid = logelm.halogmsg.split()[1]
 			rscid, op = self.parse_opid(opid)[:2]
 		except:
 			return CONV_PARSE_ERROR
@@ -2393,8 +2393,8 @@ class LogConvertFuncs:
 	def detect_rsc_failure(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid = self.parse_opid(wordlist[2])[0]
-			rcstr = self.trimmark(wordlist[7],"=")
+			rscid = self.parse_opid(wordlist[1])[0]
+			rcstr = self.trimmark(wordlist[6],"=")
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, rcstr):
@@ -2420,8 +2420,8 @@ class LogConvertFuncs:
 	def node_status_updated(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			nodename = wordlist[1]
-			status = wordlist[4]
+			nodename = wordlist[0]
+			status = wordlist[3]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(nodename, status):
@@ -2446,8 +2446,8 @@ class LogConvertFuncs:
 	'''
 	def node_status_determined(self, outputobj, logelm, lconvfrm):
 		try:
-			nodename = logelm.halogmsg.split()[2]
-			nodestat = logelm.halogmsg.split()[4]
+			nodename = logelm.halogmsg.split()[1]
+			nodestat = logelm.halogmsg.split()[3]
 		except:
 			return CONV_PARSE_ERROR
 
@@ -2800,7 +2800,7 @@ class LogConvertFuncs:
 		try:
 			wordlist = logelm.halogmsg.split()
 			nodename = self.trimmark(wordlist[-1])
-			rscid = wordlist[2]
+			rscid = wordlist[1]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(nodename, rscid):
@@ -2829,7 +2829,7 @@ class LogConvertFuncs:
 	def add_rsc_stop(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid = wordlist[2]
+			rscid = wordlist[1]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid):
@@ -2877,11 +2877,11 @@ class LogConvertFuncs:
 	def add_no_action(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid = wordlist[2]
-			status = self.trimmark(wordlist[3])
+			rscid = wordlist[1]
+			status = self.trimmark(wordlist[2])
 			node = ""
-			if len(wordlist) >= 5:
-				node = self.trimmark(wordlist[4])
+			if len(wordlist) >= 4:
+				node = self.trimmark(wordlist[3])
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, status):
@@ -2922,7 +2922,7 @@ class LogConvertFuncs:
 			wordlist = logelm.halogmsg.split()
 			a_nodename = self.trimmark(wordlist[-1])
 			f_nodename = self.trimmark(wordlist[-3])
-			rscid = wordlist[2]
+			rscid = wordlist[1]
 		except:
 			return CONV_PARSE_ERROR
 
@@ -2958,7 +2958,7 @@ class LogConvertFuncs:
 			return CONV_OK
 
 		try:
-			rscid, op = self.parse_opid(logelm.halogmsg.split()[5])[:2]
+			rscid, op = self.parse_opid(logelm.halogmsg.split()[4])[:2]
 			if op == "monitor":
 				return CONV_OK
 		except:
@@ -3064,8 +3064,8 @@ class LogConvertFuncs:
 	def fence_op_started(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			op = wordlist[2]
-			target = wordlist[7]
+			op = wordlist[1]
+			target = wordlist[6]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(op, target):
@@ -3145,11 +3145,11 @@ class LogConvertFuncs:
 	def exec_st_device_started(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			by_node = wordlist[3]
-			op = wordlist[6]
-			for_node = wordlist[7]
-			if wordlist[8] == "with":
-				rsc = " " + wordlist[9]
+			by_node = self.trimmark(wordlist[2])
+			op = self.trimmark(wordlist[6])
+			for_node = self.trimmark(wordlist[5])
+			if wordlist[7] == "with":
+				rsc = " " + self.trimmark(wordlist[8])
 			else:
 				rsc = ""
 
@@ -3208,8 +3208,8 @@ class LogConvertFuncs:
 			attrval = None
 			# attribute name can has empty char.
 			wordlist = logelm.halogmsg.split()
-			from_node = self.trimmark(wordlist[2].split("[")[1])
-			attrname = wordlist[2].split("[")[0]
+			from_node = self.trimmark(wordlist[1].split("[")[1])
+			attrname = wordlist[1].split("[")[0]
 			attrval = logelm.halogmsg.split("->")[1].split("from")[0].strip()
 		except:
 			return CONV_PARSE_ERROR
@@ -3233,8 +3233,8 @@ class LogConvertFuncs:
 	def detect_attr_deleted(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			from_node = self.trimmark(wordlist[2].split("[")[1])
-			attrname = wordlist[2].split("[")[0]
+			from_node = self.trimmark(wordlist[1].split("[")[1])
+			attrname = wordlist[1].split("[")[0]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(attrname):
