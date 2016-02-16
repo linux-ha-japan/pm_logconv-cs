@@ -2405,16 +2405,19 @@ class LogConvertFuncs:
 		return CONV_OK
 
 	#########
-	# For Node status lost event.
+	# For Node status event.
 	#########
 	'''
-		Convert log message which means Node status lost updated.
+		Convert log message which means Node status updated.
 
 		MsgNo.6-1)
 			Jan  1 00:00:00 node01 crmd[777]:     info: peer_update_callback: 
 			node02 is now lost (was member)
+		MsgNo.6-2)
+			Jan  1 00:00:00 node01 crmd[777]:     info: peer_update_callback: 
+			node02 is now member
 	'''
-	def node_status_lost_updated(self, outputobj, logelm, lconvfrm):
+	def node_status_updated(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
 			nodename = wordlist[0]
@@ -2425,33 +2428,12 @@ class LogConvertFuncs:
 			return CONV_ITEM_EMPTY
 
 		# It's node status's change.
-		output_loglevel = self.LOG_WARN_LV
+		output_loglevel = self.LOG_INFO_LV
+		if status == "lost":
+			output_loglevel = self.LOG_WARN_LV
 
 		convertedlog = ("Node %s is %s" % (nodename, status))
 		outputobj.output_log(output_loglevel, convertedlog)
-		return CONV_OK
-
-	#########
-	# For Node status member event.
-	#########
-	'''
-		Convert log message which means Node status member updated.
-
-		MsgNo.6-2)
-			Jan  1 00:00:00 node01 crmd[777]:     info: 
-			Node 3232261518 is now known as node02
-	'''
-	def node_status_member_updated(self, outputobj, logelm, lconvfrm):
-		try:
-			wordlist = logelm.halogmsg.split()
-			nodename = wordlist[6]
-		except:
-			return CONV_PARSE_ERROR
-		if self.is_empty(nodename):
-			return CONV_ITEM_EMPTY
-
-		convertedlog = ("Node %s is member" % nodename)
-		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
 
 	'''
