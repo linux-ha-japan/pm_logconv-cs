@@ -4,7 +4,7 @@
 %define __check_files %{nil}
 %define name pm_logconv
 %define cluster cs
-%define version 2.1
+%define version 2.2
 %define release 1
 %define prefix /usr
 %define instdir pm_logconv
