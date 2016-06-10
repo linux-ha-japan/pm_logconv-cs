@@ -2420,8 +2420,12 @@ class LogConvertFuncs:
 	def node_status_updated(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			nodename = wordlist[0]
-			status = wordlist[3]
+			if wordlist[0] == "Cluster" or wordlist[0] == "Remote":
+				nodename = wordlist[2]
+				status = wordlist[5]
+			else:
+				nodename = wordlist[0]
+				status = wordlist[3]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(nodename, status):
