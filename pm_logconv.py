@@ -3068,8 +3068,8 @@ class LogConvertFuncs:
 	def fence_op_started(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			op = wordlist[1]
-			target = wordlist[6]
+			op = self.trimmark(wordlist[2])
+			target = wordlist[5]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(op, target):
