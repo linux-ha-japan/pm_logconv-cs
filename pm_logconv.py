@@ -2265,11 +2265,13 @@ class LogConvertFuncs:
 		}
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid, op = self.parse_opid(wordlist[1])[:2]
-			rcstr = self.trimmark(wordlist[5],"=")
+			op = wordlist[2]
+			rscid = wordlist[5]
+			rcstr = wordlist[8]
+			reason = self.trimmark(" ".join(wordlist[9:]))
 		except:
 			return CONV_PARSE_ERROR
-		if self.is_empty(rscid, op, rcstr):
+		if self.is_empty(rscid, op, rcstr, reason):
 			return CONV_ITEM_EMPTY
 
 		if op in completeopDic.keys():
@@ -2277,7 +2279,7 @@ class LogConvertFuncs:
 		else:
 			#Just in case. It shuoldn't occur unless cf file is modified.
 			opstr = ("%s ok" % (op))
-		convertedlog = ("Resource %s %s. (%s)" % (rscid, opstr, rcstr))
+		convertedlog = ("Resource %s %s. (rc=%s) %s" % (rscid, opstr, rcstr, reason))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
 
@@ -2326,19 +2328,23 @@ class LogConvertFuncs:
 	def operation_failed(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid, op = self.parse_opid(wordlist[1])[:2]
-			idx = logelm.halogmsg.find("rc=")
-			if idx == -1:
-				idx = logelm.halogmsg.find("status=")
-			if idx == -1:
-				return CONV_PARSE_ERROR
-			rcstr = self.trimmark(logelm.halogmsg[idx:].split(',')[0],"=")
+			rscid = wordlist[5]
+			op = wordlist[2]
+			rcstr = None
+			if wordlist[8].isdigit():
+				rcstr = wordlist[8]
+				reason = self.trimmark(" ".join(wordlist[9:]))
+			else:
+				reason = self.trimmark(" ".join(wordlist[8:]))
 		except:
 			return CONV_PARSE_ERROR
-		if self.is_empty(rscid, op, rcstr):
+		if self.is_empty(rscid, op, reason):
 			return CONV_ITEM_EMPTY
 
-		convertedlog = ("Resource %s failed to %s. (%s)" % (rscid, op, rcstr))
+		if rcstr:
+			convertedlog = ("Resource %s failed to %s. (rc=%s) %s" % (rscid, op, rcstr, reason))
+		else:
+			convertedlog = ("Resource %s failed to %s. %s" % (rscid, op, reason))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
 
@@ -2369,8 +2375,9 @@ class LogConvertFuncs:
 	'''
 	def operation_timedout_ocf(self, outputobj, logelm, lconvfrm):
 		try:
-			opid = logelm.halogmsg.split()[1]
-			rscid, op = self.parse_opid(opid)[:2]
+			wordlist = logelm.halogmsg.split()
+			rscid = wordlist[5]
+			op = wordlist[2]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, op):
@@ -2393,14 +2400,15 @@ class LogConvertFuncs:
 	def detect_rsc_failure(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid = self.parse_opid(wordlist[1])[0]
-			rcstr = self.trimmark(wordlist[6],"=")
+			rscid = wordlist[5]
+			rcstr = wordlist[8]
+			reason = self.trimmark(" ".join(wordlist[9:]))
 		except:
 			return CONV_PARSE_ERROR
-		if self.is_empty(rscid, rcstr):
+		if self.is_empty(rscid, rcstr, reason):
 			return CONV_ITEM_EMPTY
 
-		convertedlog = ("Resource %s does not work. (%s)" % (rscid, rcstr))
+		convertedlog = ("Resource %s does not work. (rc=%s) %s" % (rscid, rcstr, reason))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
 
