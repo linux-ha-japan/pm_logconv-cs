@@ -2970,7 +2970,7 @@ class LogConvertFuncs:
 			return CONV_OK
 
 		try:
-			rscid, op = self.parse_opid(logelm.halogmsg.split()[4])[:2]
+			rscid, op = self.parse_opid(logelm.halogmsg.split()[3])[:2]
 			if op == "monitor":
 				return CONV_OK
 		except:
