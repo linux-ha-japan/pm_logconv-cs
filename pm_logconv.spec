@@ -95,6 +95,7 @@ true
 %defattr(-,root,root)
 %dir /etc
 %config /etc/pm_logconv.conf.sample
+%config /etc/logrotate.d/pm_logconv
 %dir %{prefix}/share/pacemaker/%{instdir}
 %{prefix}/share/pacemaker/%{instdir}/pm_logconv.py
 %{prefix}/share/pacemaker/%{instdir}/pm_logconv_rules.conf

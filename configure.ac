@@ -95,6 +95,7 @@ AC_PROG_LN_S
 
 AC_CONFIG_FILES(Makefile	\
 		init/Makefile
+		logrotate/Makefile
 		)
 AC_OUTPUT
 
