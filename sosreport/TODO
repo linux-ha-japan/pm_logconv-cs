@@ -1,11 +1,9 @@
 TODO
- * uninstall via RPM
-   * *.pyc is left under /usr/lib/python2.7/site-packages/sos/plugins/
-   * *.pyc, *.pyo handling; should they include in RPM? or additionally remove generated files?
- * uninstall via Makefile.am
-   * ditto
- * customized path other and /var/log/pm_logconv.out
+ * should include *.pyc/*pyc of the main pm_logconv.py?
+ * customized path other than /var/log/pm_logconv.out
+ * should rename the module name to pm_logconv? (without "_cs")
  * test both on RHEL6/RHEL7
+ * test when sosreport is not installed
  * collecting ha-log is enough?
    * from when? enough old? rotated log? how determined?
  * need other logs?
