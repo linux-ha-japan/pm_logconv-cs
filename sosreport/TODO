@@ -1,13 +1,9 @@
-INSTALL
- * scp pm_logconv-cs.py root@node1:/usr/lib/python2.7/site-packages/sos/plugins/
-
 TODO
- * install via RPM into %python_sitelib directory
-   * see rpm --showrc | grep python
  * uninstall via RPM
+   * *.pyc is left under /usr/lib/python2.7/site-packages/sos/plugins/
    * *.pyc, *.pyo handling; should they include in RPM? or additionally remove generated files?
- * install/uninstall via Makefile.am
-   * for rpm generating
+ * uninstall via Makefile.am
+   * ditto
  * customized path other and /var/log/pm_logconv.out
  * test both on RHEL6/RHEL7
  * collecting ha-log is enough?
