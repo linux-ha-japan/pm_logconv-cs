@@ -1,6 +1,5 @@
 TODO
  * should include *.pyc/*pyc of the main pm_logconv.py?
- * customized path other than /var/log/pm_logconv.out
  * should rename the module name to pm_logconv? (without "_cs")
  * test both on RHEL6/RHEL7
  * test when sosreport is not installed

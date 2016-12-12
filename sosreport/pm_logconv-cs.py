@@ -19,6 +19,7 @@
 ## Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 from sos.plugins import Plugin, RedHatPlugin
+import ConfigParser
 
 # the class name determines the plugin name
 # if you want to override it simply provide a @classmethod name()
@@ -32,7 +33,16 @@ class pm_logconv_cs(Plugin, RedHatPlugin):
 #        ]
 
     def setup(self):
-        self.add_copy_spec([
-                "/etc/pm_logconv.conf",
-                "/var/log/pm_logconv.out",
-                ])
+
+        self.add_copy_spec("/etc/pm_logconv.conf")
+
+        # obtain output path if customized
+        output_path = "/var/log/pm_logconv.out"
+        config = ConfigParser.RawConfigParser()
+        config.read("/etc/pm_logconv.conf")
+        try:
+            output_path = config.get("Settings", "output_path")
+        except:
+            pass
+
+        self.add_copy_spec(output_path)
