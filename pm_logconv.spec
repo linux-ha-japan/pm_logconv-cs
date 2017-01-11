@@ -4,7 +4,7 @@
 %define __check_files %{nil}
 %define name pm_logconv
 %define cluster cs
-%define version 2.2
+%define version 2.3
 %define release 1
 %define prefix /usr
 %define instdir pm_logconv
@@ -95,6 +95,7 @@ true
 %defattr(-,root,root)
 %dir /etc
 %config /etc/pm_logconv.conf.sample
+%config /etc/logrotate.d/pm_logconv
 %dir %{prefix}/share/pacemaker/%{instdir}
 %{prefix}/share/pacemaker/%{instdir}/pm_logconv.py
 %{prefix}/share/pacemaker/%{instdir}/pm_logconv_rules.conf

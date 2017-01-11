@@ -30,7 +30,7 @@ from errno import ESRCH
 #
 # version number of pm_logconv.
 #
-VERSION = "1.0"
+VERSION = "2.3"
 
 #
 # system's host name.
@@ -356,8 +356,7 @@ class PIDFile:
 				pm_log.debug("is_running: pm_logconv isn't running.")
 				return self.NOTRUNNING
 			else:
-				pm_log.error("is_running: kill(%d, 0) error occurred." % pid)
-				pm_log.debug("is_running: kill(%d, 0) error occurred. [%s]"
+				pm_log.error("is_running: kill(%d, 0) error occurred. (%s)"
 					% (pid, strerror))
 				return self.SYSTEM_ERROR
 
@@ -373,8 +372,7 @@ class PIDFile:
 			if cmdline != cmdline_now:
 				return self.NOTRUNNING
 		except Exception, strerror:
-			pm_log.error("is_running: couldn't read from '%s'." % proc_path)
-			pm_log.debug("is_running: couldn't read from '%s'. %s"
+			pm_log.error("is_running: couldn't read from '%s'. (%s)"
 				% (proc_path, strerror))
 			return self.SYSTEM_ERROR
 		return pid
@@ -404,8 +402,7 @@ class PIDFile:
 				pm_log.info("PIDFile.read: PID file doesn't exist.")
 				return self.FILE_NOTEXIST
 		except Exception, strerror:
-			pm_log.error("PIDFile.read: I/O error occurred.")
-			pm_log.debug("PIDFile.read: I/O error occurred. [%s]" % strerror)
+			pm_log.error("PIDFile.read: I/O error occurred. (%s)" % strerror)
 			return self.SYSTEM_ERROR
 
 	'''
@@ -426,8 +423,7 @@ class PIDFile:
 			else:
 				return self.SYSTEM_ERROR
 		except Exception, strerror:
-			pm_log.error("PIDFile.lock: I/O error occurred.")
-			pm_log.debug("PIDFile.lock: I/O error occurred. [%s]" % strerror)
+			pm_log.error("PIDFile.lock: I/O error occurred. (%s)" % strerror)
 			return self.SYSTEM_ERROR
 
 		try:
@@ -445,8 +441,7 @@ class PIDFile:
 			nlink = os.stat(tfile)[ST_NLINK]
 			os.remove(tfile)
 		except Exception, strerror:
-			pm_log.error("PIDFile.lock: I/O error occurred.")
-			pm_log.debug("PIDFile.lock: I/O error occurred. [%s]" % strerror)
+			pm_log.error("PIDFile.lock: I/O error occurred. (%s)" % strerror)
 
 			try:
 				f.close()
@@ -507,8 +502,7 @@ class StatusFile:
 				dict(cstat.attrDict), dict(cstat.nodeDict)))
 			return True
 		except Exception, strerror:
-			pm_log.error("StatusFile.read: I/O error occurred.")
-			pm_log.debug("StatusFile.read: I/O error occurred. [%s]" % strerror)
+			pm_log.error("StatusFile.read: I/O error occurred. (%s)" % strerror)
 			self.clear_cstat()
 			return False
 
@@ -541,8 +535,7 @@ class StatusFile:
 				dict(cstat.attrDict), dict(cstat.nodeDict)))
 			return True
 		except Exception, strerror:
-			pm_log.error("StatusFile.write: I/O error occurred.")
-			pm_log.debug("StatusFile.write: I/O error occurred. [%s]" % strerror)
+			pm_log.error("StatusFile.write: I/O error occurred. (%s)" % strerror)
 			return False
 
 	def clear_cstat(self):
@@ -560,8 +553,7 @@ class StatusFile:
 				os.remove(self.path)
 			return True
 		except Exception, strerror:
-			pm_log.error("StatusFile.remove: I/O error occurred.")
-			pm_log.debug("StatusFile.remove: I/O error occurred. [%s]" % strerror)
+			pm_log.error("StatusFile.remove: I/O error occurred. (%s)" % strerror)
 			return False
 
 statfile = None
@@ -614,8 +606,7 @@ class ParseConfigFile:
 			cf.readfp(fp)
 		except Exception, strerror:
 			pm_log.error("ParseConfigFile.open_config_file(): " +
-				"failed to read config file [%s]." % (config_file))
-			pm_log.debug("ParseConfigFile.open_config_file(): %s" % (strerror))
+				"failed to read config file [%s]. (%s)" % (config_file, strerror))
 			sys.exit(1)
 		return  fp, cf
 
@@ -625,9 +616,8 @@ class ParseConfigFile:
 			optval = cfobj.get(secname, optname)
 		except Exception, strerror:
 			pm_log.warn("get_optval(): " +
-				"failed to get value of \"%s\" in [%s] section. " %
-				(optname, secname))
-			pm_log.debug("get_optval(): %s" % (strerror))
+				"failed to get value of \"%s\" in [%s] section. (%s)" %
+				(optname, secname, strerror))
 			return None
 
 		if optval == "":
@@ -1065,8 +1055,7 @@ class LogConvert:
 							"as \"%s\" and \"%s\"." % (pathi, desci, descj))
 						return False
 		except Exception, strerror:
-			pm_log.error("checking path: error occurred.")
-			pm_log.debug("checking path: error occurred. [%s]" % strerror)
+			pm_log.error("checking path: error occurred. (%s)" % strerror)
 			return False
 
 		if not self.stop_logconv and not self.ask_status:
@@ -1087,15 +1076,13 @@ class LogConvert:
 				pm_log.debug("make_daemon: fork() #1 succeeded. pid[%d]" % os.getpid())
 				pm_log.pid = os.getpid()
 			except OSError, strerror:
-				pm_log.error("make_daemon: fork() #1 error occurred.")
-				pm_log.debug("make_daemon: fork() #1 error occurred. [%s]" % strerror)
+				pm_log.error("make_daemon: fork() #1 error occurred. (%s)" % strerror)
 				sys.exit(1)
 
 			try:
 				os.setsid()
 			except OSError, strerror:
-				pm_log.error("make_daemon: setsid() error occurred.")
-				pm_log.debug("make_daemon: setsid() error occurred. [%s]" % strerror)
+				pm_log.error("make_daemon: setsid() error occurred. (%s)" % strerror)
 				sys.exit(1)
 
 			try:
@@ -1105,8 +1092,7 @@ class LogConvert:
 				pm_log.debug("make_daemon: fork() #2 succeeded. pid[%d]" % os.getpid())
 				pm_log.pid = os.getpid()
 			except OSError, strerror:
-				pm_log.error("make_daemon: fork() #2 error occurred.")
-				pm_log.debug("make_daemon: fork() #2 error occurred. [%s]" % strerror)
+				pm_log.error("make_daemon: fork() #2 error occurred. (%s)" % strerror)
 				sys.exit(1)
 
 		ret = pidfile.lock()
@@ -1166,8 +1152,7 @@ class LogConvert:
 				time.sleep(1)
 		except Exception, (errNo, strerror):
 			if errNo != ESRCH:
-				pm_log.warn("logconv_stop: pid %d not killed." % logconv_pid)
-				pm_log.debug("logconv_stop: pid %d not killed. [%s]"
+				pm_log.warn("logconv_stop: pid %d not killed. (%s)"
 					% (logconv_pid, strerror))
 				return 1
 			else:
@@ -1230,8 +1215,7 @@ class LogConvert:
 				% (HA_LOGFILE, os.fstat(f.fileno()).st_ino))
 			return f
 		except Exception, strerror:
-			pm_log.error("get_fd: I/O error occurred.")
-			pm_log.debug("get_fd: I/O error occurred. [%s]" % strerror)
+			pm_log.error("get_fd: I/O error occurred. (%s)" % strerror)
 			statfile.clear_cstat()
 			return None
 
@@ -1254,8 +1238,7 @@ class LogConvert:
 				return None
 
 		except Exception, strerror:
-			pm_log.warn("get_nextlog: error occurred.")
-			pm_log.debug("get_nextlog: error occurred. [%s]" % strerror)
+			pm_log.warn("get_nextlog: error occurred. (%s)" % strerror)
 			statfile.clear_cstat()
 		return None
 
@@ -1328,8 +1311,7 @@ class LogConvert:
 						outputobj, logelm, lconvfrm)
 				except Exception, strerror:
 					pm_log.error("do_ptn_matching(): " +
-						"failed to execute %s()." % (lconvfrm.func))
-					pm_log.debug("do_ptn_matching(): %s" % (strerror))
+						"failed to execute %s(). (%s)" % (lconvfrm.func, strerror))
 					continue # To check next rule.
 
 				if ret == CONV_OK:
@@ -1450,8 +1432,7 @@ class LogConvert:
 					self.do_ptn_matching(logline.replace('#011', ' '))
 					statfile.write(self.is_oneshot)
 		except Exception, strerror:
-			pm_log.error("convert: error occurred.")
-			pm_log.debug("convert: error occurred. [%s]" % strerror)
+			pm_log.error("convert: error occurred. (%s)" % strerror)
 			return 1
 
 	'''
@@ -1642,9 +1623,8 @@ class OutputConvertedLog:
 				f.close()
 		except Exception, strerror:
 			pm_log.error("output_log(): " +
-				"failed to output converted log message. [%s]" %
-				(outputstr))
-			pm_log.debug("output_log(): %s" % (strerror))
+				"failed to output converted log message. [%s] (%s)" %
+				(outputstr, strerror))
 			return -1
 		return 0
 
@@ -1860,8 +1840,7 @@ class LogConvertFuncs:
 		except Exception, strerror:
 			pm_log.error("exec_outside_cmd(): " +
 				"failed to execute which command to get command path. " +
-				"[%s]" % (cmdname))
-			pm_log.debug("exec_outside_cmd(): %s" % (strerror))
+				"[%s] (%s)" % (cmdname, strerror))
 			return None, None
 		if (os.WIFEXITED(status) == False or os.WEXITSTATUS(status) != 0):
 			pm_log.error("exec_outside_cmd(): " +
@@ -1880,8 +1859,7 @@ class LogConvertFuncs:
 			status, output = commands.getstatusoutput(exec_cmd)
 		except Exception, strerror:
 			pm_log.error("exec_outside_cmd(): " +
-				"failed to exec command. [%s]" % (exec_cmd))
-			pm_log.debug("exec_outside_cmd(): %s" % (strerror))
+				"failed to exec command. [%s] (%s)" % (exec_cmd, strerror))
 			return None, None
 
 		# Check return status.
@@ -2265,11 +2243,13 @@ class LogConvertFuncs:
 		}
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid, op = self.parse_opid(wordlist[1])[:2]
-			rcstr = self.trimmark(wordlist[5],"=")
+			op = wordlist[2]
+			rscid = wordlist[5]
+			rcstr = wordlist[8]
+			reason = self.trimmark(" ".join(wordlist[9:]))
 		except:
 			return CONV_PARSE_ERROR
-		if self.is_empty(rscid, op, rcstr):
+		if self.is_empty(rscid, op, rcstr, reason):
 			return CONV_ITEM_EMPTY
 
 		if op in completeopDic.keys():
@@ -2277,7 +2257,7 @@ class LogConvertFuncs:
 		else:
 			#Just in case. It shuoldn't occur unless cf file is modified.
 			opstr = ("%s ok" % (op))
-		convertedlog = ("Resource %s %s. (%s)" % (rscid, opstr, rcstr))
+		convertedlog = ("Resource %s %s. (rc=%s) %s" % (rscid, opstr, rcstr, reason))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
 
@@ -2326,19 +2306,23 @@ class LogConvertFuncs:
 	def operation_failed(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid, op = self.parse_opid(wordlist[1])[:2]
-			idx = logelm.halogmsg.find("rc=")
-			if idx == -1:
-				idx = logelm.halogmsg.find("status=")
-			if idx == -1:
-				return CONV_PARSE_ERROR
-			rcstr = self.trimmark(logelm.halogmsg[idx:].split(',')[0],"=")
+			rscid = wordlist[5]
+			op = wordlist[2]
+			rcstr = None
+			if wordlist[8].isdigit():
+				rcstr = wordlist[8]
+				reason = self.trimmark(" ".join(wordlist[9:]))
+			else:
+				reason = self.trimmark(" ".join(wordlist[8:]))
 		except:
 			return CONV_PARSE_ERROR
-		if self.is_empty(rscid, op, rcstr):
+		if self.is_empty(rscid, op, reason):
 			return CONV_ITEM_EMPTY
 
-		convertedlog = ("Resource %s failed to %s. (%s)" % (rscid, op, rcstr))
+		if rcstr:
+			convertedlog = ("Resource %s failed to %s. (rc=%s) %s" % (rscid, op, rcstr, reason))
+		else:
+			convertedlog = ("Resource %s failed to %s. %s" % (rscid, op, reason))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
 
@@ -2369,8 +2353,9 @@ class LogConvertFuncs:
 	'''
 	def operation_timedout_ocf(self, outputobj, logelm, lconvfrm):
 		try:
-			opid = logelm.halogmsg.split()[1]
-			rscid, op = self.parse_opid(opid)[:2]
+			wordlist = logelm.halogmsg.split()
+			rscid = wordlist[5]
+			op = wordlist[2]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, op):
@@ -2393,14 +2378,15 @@ class LogConvertFuncs:
 	def detect_rsc_failure(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid = self.parse_opid(wordlist[1])[0]
-			rcstr = self.trimmark(wordlist[6],"=")
+			rscid = wordlist[5]
+			rcstr = wordlist[8]
+			reason = self.trimmark(" ".join(wordlist[9:]))
 		except:
 			return CONV_PARSE_ERROR
-		if self.is_empty(rscid, rcstr):
+		if self.is_empty(rscid, rcstr, reason):
 			return CONV_ITEM_EMPTY
 
-		convertedlog = ("Resource %s does not work. (%s)" % (rscid, rcstr))
+		convertedlog = ("Resource %s does not work. (rc=%s) %s" % (rscid, rcstr, reason))
 		outputobj.output_log(lconvfrm.loglevel, convertedlog)
 		return CONV_OK
 
@@ -2420,8 +2406,12 @@ class LogConvertFuncs:
 	def node_status_updated(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			nodename = wordlist[0]
-			status = wordlist[3]
+			if wordlist[0] == "Cluster" or wordlist[0] == "Remote":
+				nodename = wordlist[2]
+				status = wordlist[5]
+			else:
+				nodename = wordlist[0]
+				status = wordlist[3]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(nodename, status):
@@ -2958,7 +2948,7 @@ class LogConvertFuncs:
 			return CONV_OK
 
 		try:
-			rscid, op = self.parse_opid(logelm.halogmsg.split()[4])[:2]
+			rscid, op = self.parse_opid(logelm.halogmsg.split()[3])[:2]
 			if op == "monitor":
 				return CONV_OK
 		except:
@@ -3064,8 +3054,8 @@ class LogConvertFuncs:
 	def fence_op_started(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			op = wordlist[1]
-			target = wordlist[6]
+			op = self.trimmark(wordlist[2])
+			target = wordlist[5]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(op, target):
