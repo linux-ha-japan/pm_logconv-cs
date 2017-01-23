@@ -1,5 +1,5 @@
 [Unit]
-Description=Pacemaker and Corosync Log Message Converter
+Description=Log Message Converter for pacemaker and corosync
 
 [Install]
 WantedBy=multi-user.target
