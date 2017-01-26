@@ -52,6 +52,10 @@ class pm_logconv_cs(Plugin, RedHatPlugin):
         except:
             pass
 
+        if self.get_option("all_logs"):
+            output_path = output_path + "*"
+            halog_path = halog_path + "*"
+
         self.add_copy_spec([
             output_path,
             halog_path
