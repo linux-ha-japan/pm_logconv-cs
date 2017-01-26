@@ -600,7 +600,7 @@ class ParseConfigFile:
 		if not os.path.exists(config_file):
 			pm_log.error("ParseConfigFile.open_config_file(): " +
 				"config file [%s] does not exist." % (config_file))
-			sys.exit(1)
+			sys.exit(6)
 		try:
 			fp = open(config_file)
 			cf.readfp(fp)
