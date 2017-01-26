@@ -94,8 +94,9 @@ AC_SUBST(HA_NOARCHDATAHBDIR)
 AC_PROG_LN_S
 
 AC_CONFIG_FILES(Makefile	\
-		init/Makefile
-		logrotate/Makefile
+		init/Makefile	\
+		logrotate/Makefile \
+		sosreport/Makefile
 		)
 AC_OUTPUT
 
