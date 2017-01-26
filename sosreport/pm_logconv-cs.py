@@ -38,11 +38,22 @@ class pm_logconv_cs(Plugin, RedHatPlugin):
 
         # obtain output path if customized
         output_path = "/var/log/pm_logconv.out"
+        halog_path = "/var/log/ha-log"
         config = ConfigParser.RawConfigParser()
         config.read("/etc/pm_logconv.conf")
+
         try:
             output_path = config.get("Settings", "output_path")
         except:
             pass
 
-        self.add_copy_spec(output_path)
+        try:
+            halog_path = config.get("Settings", "ha_log_path")
+        except:
+            pass
+
+        self.add_copy_spec([
+            output_path,
+            halog_path
+        ])
+
