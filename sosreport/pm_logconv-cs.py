@@ -28,33 +28,45 @@ class pm_logconv_cs(Plugin, RedHatPlugin):
     """Pacemaker and Corosync log message converter
     """
 
-#    packages = [
-#        "pm_logconv-cs",
-#        ]
+#    packages = [ "pm_logconv-cs", ]
+    profiles = [ "cluster", ]
+
+    option_list = [
+        ("single-file", "enable single file collection", "", False),
+    ]
 
     def setup(self):
 
         self.add_copy_spec("/etc/pm_logconv.conf")
 
         # obtain output path if customized
-        output_path = "/var/log/pm_logconv.out"
-        halog_path = "/var/log/ha-log"
         config = ConfigParser.RawConfigParser()
         config.read("/etc/pm_logconv.conf")
 
         try:
             output_path = config.get("Settings", "output_path")
         except:
-            pass
+            output_path = "/var/log/pm_logconv.out"
+            self._log_info(
+                "output_path not exist, uses the default %s"
+                % output_path)
+
+        output_path = output_path + "*"
 
         try:
             halog_path = config.get("Settings", "ha_log_path")
         except:
-            pass
+            halog_path = "/var/log/ha-log"
+            self._log_info(
+                "halog_path not exist, uses the default %s"
+                % halog_path)
 
-        if self.get_option("all_logs"):
-            output_path = output_path + "*"
-            halog_path = halog_path + "*"
+        halog_path = halog_path + "*"
+
+        if self.get_option("single-file"):
+            self._log_info("enable single-file options")
+            output_path = output_path.rstrip("*")
+            halog_path = halog_path.rstrip("*")
 
         self.add_copy_spec([
             output_path,
