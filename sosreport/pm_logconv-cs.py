@@ -31,6 +31,9 @@ class pm_logconv_cs(Plugin, RedHatPlugin):
 #    packages = [
 #        "pm_logconv-cs",
 #        ]
+    profiles = [
+        "cluster",
+        ]
 
     def setup(self):
 
