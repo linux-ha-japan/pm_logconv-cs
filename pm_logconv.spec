@@ -101,7 +101,7 @@ true
 %{prefix}/share/pacemaker/%{instdir}/pm_logconv_rules.conf
 %{?with_upstart:%attr (644, root, root) %{_sysconfdir}/init/pm_logconv_init.conf}
 %{?with_systemd:%attr (644, root, root) %{_unitdir}/pm_logconv.service}
-%{python_sitelib}/sos/plugins/pm_logconv-cs.py*
+%{python_sitelib}/sos/plugins/pm_logconv_cs.py*
 
 %changelog
 * Mon Aug 25 2014 Yusuke Iida <yusk.iida@gmail.com> - 2.0
