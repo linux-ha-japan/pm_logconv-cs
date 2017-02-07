@@ -29,6 +29,7 @@ class pm_logconv_cs(Plugin, RedHatPlugin):
     """
 
 #    packages = [ "pm_logconv-cs", ]
+    plugin_name = "pm_logconv_cs"
     profiles = [ "cluster", ]
 
     option_list = [
