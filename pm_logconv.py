@@ -50,6 +50,7 @@ SYSCONFIGFILE = "/usr/share/pacemaker/pm_logconv/pm_logconv_rules.conf"
 HA_LOGFILE = "/var/log/ha-log"
 OUTPUTFILE = "/var/log/pm_logconv.out"
 OUTPUT_LOGFACILITY = None
+OUTPUT_ASYNCWRITE = False
 SYSLOGFORMAT = True
 LOGFACILITY = None
 
@@ -567,6 +568,7 @@ class ParseConfigFile:
 		self.OPT_HA_LOG_PATH = "ha_log_path"
 		self.OPT_OUTPUT_PATH = "output_path"
 		self.OPT_OUTPUT_LOGFACILITY = "output_logfacility"
+		self.OPT_OUTPUT_ASYNCWRITE = "output_async_write"
 		self.OPT_DATEFORMAT = "syslogformat"
 		self.OPT_MANAGE_ATTR = "attribute"
 		self.OPT_PATTERN = "pattern"
@@ -636,6 +638,7 @@ class ParseConfigFile:
 		global HA_LOGFILE
 		global OUTPUTFILE
 		global OUTPUT_LOGFACILITY
+		global OUTPUT_ASYNCWRITE
 		global SYSLOGFORMAT
 		global attrRuleList
 		global attrRules
@@ -667,6 +670,15 @@ class ParseConfigFile:
 					OUTPUTFILE = None
 				else:
 					OUTPUTFILE = optval
+			elif optname == self.OPT_OUTPUT_ASYNCWRITE:
+				if optval.lower() == "true":
+					OUTPUT_ASYNCWRITE = True
+				elif optval.lower() == "false":
+					OUTPUT_ASYNCWRITE = False
+				else:
+					pm_log.warn("parse_basic_settings(): " +
+						"the value of \"%s\" is invalid. " % (optname) +
+						"Ignore the setting.")
 			elif optname == self.OPT_DATEFORMAT:
 				if optval.lower() == "true":
 					SYSLOGFORMAT = True
@@ -1626,7 +1638,11 @@ class OutputConvertedLog:
 				outputstr = ("%s %s %s" % (self.datestr, HOSTNAME, outputstr))
 				f = open(OUTPUTFILE, 'a')
 				f.write("%s\n" % (outputstr))
-				f.close()
+				if OUTPUT_ASYNCWRITE == True:
+					f.close()
+				else:
+					f.flush()
+					os.fdatasync(f)
 		except Exception, strerror:
 			pm_log.error("output_log(): " +
 				"failed to output converted log message. [%s] (%s)" %
