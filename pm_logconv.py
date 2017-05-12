@@ -3108,12 +3108,11 @@ class LogConvertFuncs:
 			wordlist = logelm.halogmsg.split()
 			tgt_node = wordlist[wordlist.index("Peer") + 1]
 			op = self.trimmark(wordlist[wordlist.index("terminated") + 1])
-			by_node = " ".join(wordlist[wordlist.index("by") + 1 : wordlist.index("for")])
-			for_node = self.trimmark(wordlist[wordlist.index("for") + 1])
-			result = wordlist[wordlist.index("for") + 2]
+			by_node = " ".join(wordlist[wordlist.index("by") + 1 : wordlist.index("on")])
+			result = wordlist[wordlist.index("of") + 2]
 		except:
 			return CONV_PARSE_ERROR
-		if self.is_empty(tgt_node, op, by_node, for_node, result):
+		if self.is_empty(tgt_node, op, by_node, result):
 			return CONV_ITEM_EMPTY
 
 		if result == "OK":
@@ -3135,7 +3134,7 @@ class LogConvertFuncs:
 	def fence_too_many_failures(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			node = wordlist[wordlist.index("fence") + 1]
+			node = wordlist[wordlist.index("fence") + 1].split(',')[0]
 		except:
 			return CONV_PARSE_ERROR
 
