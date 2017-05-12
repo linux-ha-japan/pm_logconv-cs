@@ -1225,11 +1225,17 @@ class LogConvert:
 	def get_nextlog(self, ino):
 		try:
 			for log in glob.glob(HA_LOGFILE + "?*"):
+				try:
+					log_stat = os.stat(log)
+				except (OSError, IOError), strerror:
+					pm_log.warn("get_nextlog: I/O error occurred. (%s)" % strerror)
+					continue
+				log_inode = log_stat[ST_INO]
 				pm_log.debug("get_nextlog: searching previous target[%s(inode:%d)]"
-					% (log, os.stat(log)[ST_INO]))
-				if ino == os.stat(log)[ST_INO]:
+					% (log, log_inode))
+				if ino == log_inode:
 					pm_log.debug("get_nextlog: searching.. found it[%s].size[%d]"
-						% (log, os.stat(log)[ST_SIZE]))
+						% (log, log_stat[ST_SIZE]))
 					break
 			else:
 				pm_log.warn("get_nextlog: target(inode:%d) was lost. " \
