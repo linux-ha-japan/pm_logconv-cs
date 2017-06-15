@@ -4,7 +4,7 @@
 %define __check_files %{nil}
 %define name pm_logconv
 %define cluster cs
-%define version 2.3
+%define version 2.4
 %define release 1
 %define prefix /usr
 %define instdir pm_logconv
@@ -101,6 +101,7 @@ true
 %{prefix}/share/pacemaker/%{instdir}/pm_logconv_rules.conf
 %{?with_upstart:%attr (644, root, root) %{_sysconfdir}/init/pm_logconv_init.conf}
 %{?with_systemd:%attr (644, root, root) %{_unitdir}/pm_logconv.service}
+%{python_sitelib}/sos/plugins/pm_logconv_cs.py*
 
 %changelog
 * Mon Aug 25 2014 Yusuke Iida <yusk.iida@gmail.com> - 2.0

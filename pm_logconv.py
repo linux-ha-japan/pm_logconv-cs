@@ -30,7 +30,7 @@ from errno import ESRCH
 #
 # version number of pm_logconv.
 #
-VERSION = "2.3"
+VERSION = "2.4"
 
 #
 # system's host name.
@@ -600,7 +600,7 @@ class ParseConfigFile:
 		if not os.path.exists(config_file):
 			pm_log.error("ParseConfigFile.open_config_file(): " +
 				"config file [%s] does not exist." % (config_file))
-			sys.exit(1)
+			sys.exit(6)
 		try:
 			fp = open(config_file)
 			cf.readfp(fp)

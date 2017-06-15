@@ -1,0 +1,12 @@
+TODO
+ * should include *.pyc/*pyc of the main pm_logconv.py?
+ * should rename the module name to pm_logconv? (without "_cs")
+ * test both on RHEL6/RHEL7
+ * test when sosreport is not installed
+ * collecting ha-log is enough?
+   * from when? enough old? rotated log? how determined?
+ * need other logs?
+   * logrotate.d/syslog, rsyslog.conf, journal.conf, etc.
+   * if any, move the sosreport plugin into pm_extras and add them accordingly
+ * Finalize; remove this TODO file and squash commits to merge
+   

@@ -1,5 +1,5 @@
 [Unit]
-Description=Pacemaker and Corosync Log Message Converter
+Description=Log Message Converter for pacemaker and corosync
 
 [Install]
 WantedBy=multi-user.target
@@ -7,5 +7,4 @@ WantedBy=multi-user.target
 [Service]
 ExecStart=/usr/share/pacemaker/pm_logconv/pm_logconv.py
 Restart=always
-
-ExecStopPost=/bin/sh -c '[ ! -f /etc/pm_logconv.conf ] && systemctl stop pm_logconv.service'
+RestartPreventExitStatus=6

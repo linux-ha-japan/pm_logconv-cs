@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT([pm_logconv-cs], [2.3])
+AC_INIT([pm_logconv-cs], [2.4])
 AM_INIT_AUTOMAKE
 AC_PREFIX_DEFAULT(/usr)
 PM_PKG="pacemaker"
@@ -94,8 +94,9 @@ AC_SUBST(HA_NOARCHDATAHBDIR)
 AC_PROG_LN_S
 
 AC_CONFIG_FILES(Makefile	\
-		init/Makefile
-		logrotate/Makefile
+		init/Makefile	\
+		logrotate/Makefile \
+		sosreport/Makefile
 		)
 AC_OUTPUT
 
