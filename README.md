@@ -3,10 +3,9 @@
 - [1. 変換の例](#1-変換の例)
   - [1.1 サービス系リソースの故障によるフェイルオーバ発生時の例](#11-サービス系リソースの故障によるフェイルオーバ発生時の例)
   - [1.2 故障発生ノードのSTONITHを含むフェイルオーバ発生時の例](#12-故障発生ノードのstonithを含むフェイルオーバ発生時の例)
-  - [1.3 変換後ログメッセージの一覧](#13-変換後ログメッセージの一覧)
-- [2. 前提条件](#2-前提条件)
+- [2. 動作条件](#2-動作条件)
 - [3. インストール](#3-インストール)
-- [4. 使用方法](#4-使用方法)
+- [4. 設定・起動方法](#4-設定起動方法)
   - [4.1. Corosync（ログ出力先）の設定](#41-corosyncログ出力先の設定)
     - [4.1.1. /etc/corosync/corosync.conf の編集](#411-etccorosynccorosyncconf-の編集)
   - [4.2. Pacemaker（ログ出力先）の設定](#42-pacemakerログ出力先の設定)
@@ -18,7 +17,9 @@
     - [4.3.1. attributeの指定方法](#431-attributeの指定方法)
     - [4.3.2. act_rscの指定方法](#432-act_rscの指定方法)
   - [4.4. pm_logconvのプロセス起動](#44-pm_logconvのプロセス起動)
-- [関連情報](#関連情報)
+- [関連リンク](#関連リンク)
+  - [Pacemakerリポジトリパッケージ](#関連リンク)
+  - [pm_logconv-cs変換後ログメッセージ一覧](#関連リンク)
 
 本ドキュメントは、Pacemaker-1.1.16リポジトリパッケージに含まれる pm_logconv-cs-2.4 について記述しています。
 
@@ -71,35 +72,37 @@ Pacemakerのログは出力される量が多く、内容が分かりにくい�
     * prmPg_monitor_10000 on pm01 'not running' (7): call=25, status=complete, exitreason='none',
         last-rc-change='Mon Apr 24 06:19:55 2017', queued=0ms, exec=0ms
     ```
-- ノードpm01（DCノード）の pm_logconv.out
-  ```
-  Apr 24 06:19:55 pm01   error: Resource prmPg does not work. (rc=7) not running	# リソースの故障検知時のha-log(③)を変換したログ
-  Apr 24 06:19:55 pm01   error: Start to fail-over.				#「フェイルオーバ」処理の開始を示す(DCノードで出力される)ログ
-  Apr 24 06:19:55 pm01    info: Resource prmPg tries to stop.			# リソースの停止処理－開始時のha-log(④)と、
-  Apr 24 06:19:56 pm01    info: Resource prmPg stopped. (rc=0) ok			# リソースの停止処理－完了時のha-log(⑤)を変換したログ
-  Apr 24 06:19:56 pm01    info: Resource prmIp tries to stop.
-  Apr 24 06:19:56 pm01    info: Resource prmIp stopped. (rc=0) ok
-  Apr 24 06:19:56 pm01    info: Resource prmFs tries to stop.
-  Apr 24 06:19:56 pm01    info: Resource prmFs stopped. (rc=0) ok
-  Apr 24 06:19:56 pm01    info: Resource prmEx tries to stop.
-  Apr 24 06:19:56 pm01    info: Resource prmEx stopped. (rc=0) ok
-  Apr 24 06:19:59 pm01    info: Resource prmEx : Move pm01 -> pm02		#「フェイルオーバ」処理のサマリのログ
-  Apr 24 06:19:59 pm01    info: Resource prmPg : Move pm01 -> pm02
-  Apr 24 06:19:59 pm01    info: fail-over succeeded.				#「フェイルオーバ」処理の完了(成功)を示すログ
-  ```
-  - ha-log は[こちら](doc/ha-log.md#変換の例-1--ノードpm01の-ha-log)
-- ノードpm02（非DCノード）の pm_logconv.out
-  ```
-  Apr 24 06:19:55 pm02    info: Resource prmEx tries to start.			# リソースの開始処理－開始時のha-log(⑥)と、
-  Apr 24 06:19:56 pm02    info: Resource prmEx started. (rc=0) ok			# リソースの開始処理－完了時のha-log(⑦)を変換したログ
-  Apr 24 06:19:56 pm02    info: Resource prmFs tries to start.
-  Apr 24 06:19:57 pm02    info: Resource prmFs started. (rc=0) ok
-  Apr 24 06:19:57 pm02    info: Resource prmIp tries to start.
-  Apr 24 06:19:57 pm02    info: Resource prmIp started. (rc=0) ok
-  Apr 24 06:19:57 pm02    info: Resource prmPg tries to start.
-  Apr 24 06:19:58 pm02    info: Resource prmPg started. (rc=0) ok
-  ```
-  - ha-log は[こちら](doc/ha-log.md#変換の例-1--ノードpm02の-ha-log)
+- ノードpm01（DCノード）のログ ：
+  - ha-log [(こちらのページを参照)](doc/ha-log.md#変換の例-1--ノードpm01の-ha-log)
+  - pm_logconv.out
+    ```
+    Apr 24 06:19:55 pm01   error: Resource prmPg does not work. (rc=7) not running	# リソースの故障検知時のha-log(③)を変換したログ
+    Apr 24 06:19:55 pm01   error: Start to fail-over.				#「フェイルオーバ」処理の開始を示す(DCノードで出力される)ログ
+    Apr 24 06:19:55 pm01    info: Resource prmPg tries to stop.			# リソースの停止処理－開始時のha-log(④)と、
+    Apr 24 06:19:56 pm01    info: Resource prmPg stopped. (rc=0) ok			# リソースの停止処理－完了時のha-log(⑤)を変換したログ
+    Apr 24 06:19:56 pm01    info: Resource prmIp tries to stop.
+    Apr 24 06:19:56 pm01    info: Resource prmIp stopped. (rc=0) ok
+    Apr 24 06:19:56 pm01    info: Resource prmFs tries to stop.
+    Apr 24 06:19:56 pm01    info: Resource prmFs stopped. (rc=0) ok
+    Apr 24 06:19:56 pm01    info: Resource prmEx tries to stop.
+    Apr 24 06:19:56 pm01    info: Resource prmEx stopped. (rc=0) ok
+    Apr 24 06:19:59 pm01    info: Resource prmEx : Move pm01 -> pm02		#「フェイルオーバ」処理のサマリのログ
+    Apr 24 06:19:59 pm01    info: Resource prmPg : Move pm01 -> pm02
+    Apr 24 06:19:59 pm01    info: fail-over succeeded.				#「フェイルオーバ」処理の完了(成功)を示すログ
+    ```
+- ノードpm02（非DCノード）のログ ：
+  - ha-log [(こちらのページを参照)](doc/ha-log.md#変換の例-1--ノードpm02の-ha-log)
+  - pm_logconv.out
+    ```
+    Apr 24 06:19:55 pm02    info: Resource prmEx tries to start.			# リソースの開始処理－開始時のha-log(⑥)と、
+    Apr 24 06:19:56 pm02    info: Resource prmEx started. (rc=0) ok			# リソースの開始処理－完了時のha-log(⑦)を変換したログ
+    Apr 24 06:19:56 pm02    info: Resource prmFs tries to start.
+    Apr 24 06:19:57 pm02    info: Resource prmFs started. (rc=0) ok
+    Apr 24 06:19:57 pm02    info: Resource prmIp tries to start.
+    Apr 24 06:19:57 pm02    info: Resource prmIp started. (rc=0) ok
+    Apr 24 06:19:57 pm02    info: Resource prmPg tries to start.
+    Apr 24 06:19:58 pm02    info: Resource prmPg started. (rc=0) ok
+    ```
 
 ### 1.2 故障発生ノードのSTONITHを含むフェイルオーバ発生時の例
 - 下記⑧のクラスタ状態から、
@@ -183,43 +186,42 @@ Pacemakerのログは出力される量が多く、内容が分かりにくい�
     Migration Summary:
     * Node pm02:
     ```
-- ノードpm01の pm_logconv.out
-  ```
-  Apr 24 06:26:35 pm01   error: Network to 192.168.201.254 is unreachable.				# NW経路故障検知時のha-log(⑩)を変換したログ
-  Apr 24 06:26:35 pm01    info: Attribute "default_ping_set" is updated to "0" at "pm01".			# 属性変更時のha-log(⑪)を変換したログ
-  Apr 24 06:26:40 pm01    info: Resource prmPg tries to stop.
-  Apr 24 06:26:43 pm01   error: Resource prmPg failed to stop. (rc=1) unknown error			# STONITHされたためここまでの出力
-  ```
-  - ha-log は[こちら](doc/ha-log.md#変換の例-2--ノードpm01の-ha-log)
-- ノードpm02の pm_logconv.out
-  ```
-  Apr 24 06:26:34 pm02    info: Attribute "default_ping_set" is updated to "0" at "pm01".			# 属性変更時のha-log(⑪)を変換したログ
-  Apr 24 06:26:40 pm02   error: Start to fail-over.
-  Apr 24 06:26:43 pm02    info: Try to STONITH (reboot) pm01.						# STONITH処理－開始時のha-log(⑫)を変換したログ
-  Apr 24 06:26:43 pm02    info: Try to execute STONITH device prmStonith1-1 on pm02 for reboot pm01.	# stonith-helperプラグインによるSTONITH(ノードの生死確認・相撃ち防止)処理
-  Apr 24 06:26:47 pm02 warning: Failed to execute STONITH device prmStonith1-1 for pm01.
-  Apr 24 06:26:47 pm02    info: Try to execute STONITH device prmStonith1-2 on pm02 for reboot pm01.	# STONITHデバイス実行－開始時のha-log(⑬)を変換したログ
-  Apr 24 06:26:50 pm02 warning: Node pm01 is lost								# クラスタからノード離脱時のha-log(⑭)を変換したログ
-  Apr 24 06:26:52 pm02    info: Succeeded to execute STONITH device prmStonith1-2 for pm01.		# STONITHデバイス実行－成功時のha-log(⑮)を変換したログ
-  Apr 24 06:26:52 pm02    info: Succeeded to STONITH (reboot) pm01 by pm02.				# STONITH処理－成功時のha-log(⑯)を変換したログ
-  Apr 24 06:26:52 pm02    info: Resource prmEx tries to start.
-  Apr 24 06:28:03 pm02    info: Resource prmEx started. (rc=0) ok
-  Apr 24 06:28:03 pm02    info: Resource prmFs tries to start.
-  Apr 24 06:28:03 pm02    info: Resource prmFs started. (rc=0) ok
-  Apr 24 06:28:03 pm02    info: Resource prmIp tries to start.
-  Apr 24 06:28:04 pm02    info: Resource prmIp started. (rc=0) ok
-  Apr 24 06:28:04 pm02    info: Resource prmPg tries to start.
-  Apr 24 06:28:05 pm02    info: Resource prmPg started. (rc=0) ok
-  Apr 24 06:28:05 pm02    info: Resource prmEx : Move pm01 -> pm02
-  Apr 24 06:28:05 pm02    info: Resource prmPg : Move pm01 -> pm02
-  Apr 24 06:28:05 pm02    info: fail-over succeeded.
-  ```
-  - ha-log は[こちら](doc/ha-log.md#変換の例-2--ノードpm02の-ha-log)
+- ノードpm01（DCノード）のログ ：
+  - ha-log [(こちらのページを参照)](doc/ha-log.md#変換の例-2--ノードpm01の-ha-log)
+  - pm_logconv.out
+    ```
+    Apr 24 06:26:35 pm01   error: Network to 192.168.201.254 is unreachable.				# NW経路故障検知時のha-log(⑩)を変換したログ
+    Apr 24 06:26:35 pm01    info: Attribute "default_ping_set" is updated to "0" at "pm01".			# 属性変更時のha-log(⑪)を変換したログ
+    Apr 24 06:26:40 pm01    info: Resource prmPg tries to stop.
+    Apr 24 06:26:43 pm01   error: Resource prmPg failed to stop. (rc=1) unknown error			# STONITHされたためここまでの出力
+    ```
+- ノードpm02（非DCノード）のログ ：
+  - ha-log [(こちらのページを参照)](doc/ha-log.md#変換の例-2--ノードpm02の-ha-log)
+  - pm_logconv.out
+    ```
+    Apr 24 06:26:34 pm02    info: Attribute "default_ping_set" is updated to "0" at "pm01".			# 属性変更時のha-log(⑪)を変換したログ
+    Apr 24 06:26:40 pm02   error: Start to fail-over.
+    Apr 24 06:26:43 pm02    info: Try to STONITH (reboot) pm01.						# STONITH処理－開始時のha-log(⑫)を変換したログ
+    Apr 24 06:26:43 pm02    info: Try to execute STONITH device prmStonith1-1 on pm02 for reboot pm01.	# stonith-helperプラグインによるSTONITH(ノードの生死確認・相撃ち防止)処理
+    Apr 24 06:26:47 pm02 warning: Failed to execute STONITH device prmStonith1-1 for pm01.
+    Apr 24 06:26:47 pm02    info: Try to execute STONITH device prmStonith1-2 on pm02 for reboot pm01.	# STONITHデバイス実行－開始時のha-log(⑬)を変換したログ
+    Apr 24 06:26:50 pm02 warning: Node pm01 is lost								# クラスタからノード離脱時のha-log(⑭)を変換したログ
+    Apr 24 06:26:52 pm02    info: Succeeded to execute STONITH device prmStonith1-2 for pm01.		# STONITHデバイス実行－成功時のha-log(⑮)を変換したログ
+    Apr 24 06:26:52 pm02    info: Succeeded to STONITH (reboot) pm01 by pm02.				# STONITH処理－成功時のha-log(⑯)を変換したログ
+    Apr 24 06:26:52 pm02    info: Resource prmEx tries to start.
+    Apr 24 06:28:03 pm02    info: Resource prmEx started. (rc=0) ok
+    Apr 24 06:28:03 pm02    info: Resource prmFs tries to start.
+    Apr 24 06:28:03 pm02    info: Resource prmFs started. (rc=0) ok
+    Apr 24 06:28:03 pm02    info: Resource prmIp tries to start.
+    Apr 24 06:28:04 pm02    info: Resource prmIp started. (rc=0) ok
+    Apr 24 06:28:04 pm02    info: Resource prmPg tries to start.
+    Apr 24 06:28:05 pm02    info: Resource prmPg started. (rc=0) ok
+    Apr 24 06:28:05 pm02    info: Resource prmEx : Move pm01 -> pm02
+    Apr 24 06:28:05 pm02    info: Resource prmPg : Move pm01 -> pm02
+    Apr 24 06:28:05 pm02    info: fail-over succeeded.
+    ```
 
-### 1.3 変換後ログメッセージの一覧
-- [pm_logconv-cs-2.4 変換後ログメッセージ一覧](doc/conv-msg.md)
-
-## 2. 前提条件
+## 2. 動作条件
 - (1) 本ツールは、必ず、リポジトリパッケージに同梱のPacemakerと使用すること。
   - 例えば、Pacemaker-1.1.15リポジトリパッケージのpm_logconv-csでは、Pacemaker-1.1.16リポジトリパッケージのPacemakerのログを正しく変換できません。
 - (2) PacemakerとCorosyncのログが、syslog経由でログファイルに出力するよう設定されていること。
@@ -229,13 +231,13 @@ Pacemakerのログは出力される量が多く、内容が分かりにくい�
 ※ (2)と(3)の設定方法は、[4.2. Pacemaker（ログ出力先）の設定](#42-pacemakerログ出力先の設定) で説明します。
 
 ## 3. インストール
-本ツール（pm_logconv-cs-2.4）は対応するPacemakerと共に、Pacemaker-1.1.16-1.1リポジトリパッケージ（pacemaker-repo-1.1.16-1.1.\<ver\>.x86_64.rpm）に含まれています。
+本ツール（pm_logconv-cs）は対応するPacemakerと共に、Pacemakerリポジトリパッケージに含まれています。
 
 - [Pacemakerリポジトリパッケージ](https://linux-ha.osdn.jp/wp/dl)
 
 Pacemakerのインストール時に、pm_logconv-csもインストールされます。
 
-- **参考情報**： [Pacemaker-1.1.16-1.1のインストール手順](https://linux-ha.osdn.jp/wp/archives/4618#4)
+- **参考情報**： [Pacemaker-1.1.16-1.1のインストール手順](https://linux-ha.osdn.jp/wp/archives/4618)
 
 - (1) Pacemakerリポジトリパッケージの展開
   ```
@@ -271,7 +273,7 @@ Pacemakerのインストール時に、pm_logconv-csもインストールされ�
   完了しました!
   ```
 
-## 4. 使用方法
+## 4. 設定・起動方法
 本ツールを動作させるためには、PacemakerとCorosyncが停止している状態で、以下の設定ファイルを編集します。
 
 **Corosync（ログ出力先）の設定**
@@ -527,6 +529,6 @@ act_rsc = prmEx, prmPg
   #
   ```
 
-## 関連情報
+## 関連リンク
 - [Pacemakerリポジトリパッケージ](https://linux-ha.osdn.jp/wp/dl)
-- [pm_logconv-cs-2.4 変換後ログメッセージ一覧](doc/conv-msg.md)
+- [pm_logconv-cs変換後ログメッセージ一覧](doc/conv-msg.md)
