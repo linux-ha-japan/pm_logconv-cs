@@ -17,9 +17,8 @@
     - [4.3.1. attributeの指定方法](#431-attributeの指定方法)
     - [4.3.2. act_rscの指定方法](#432-act_rscの指定方法)
   - [4.4. pm_logconvのプロセス起動](#44-pm_logconvのプロセス起動)
+- [5. 変換後ログメッセージの一覧](#5-変換後ログメッセージの一覧)
 - [関連リンク](#関連リンク)
-  - [Pacemakerリポジトリパッケージ](#関連リンク)
-  - [pm_logconv-cs変換後ログメッセージ一覧](#関連リンク)
 
 本ドキュメントは、Pacemaker-1.1.16リポジトリパッケージに含まれる pm_logconv-cs-2.4 について記述しています。
 
@@ -73,7 +72,7 @@ Pacemakerのログは出力される量が多く、内容が分かりにくい�
         last-rc-change='Mon Apr 24 06:19:55 2017', queued=0ms, exec=0ms
     ```
 - ノードpm01（DCノード）のログ ：
-  - ha-log [(こちらのページを参照)](doc/ha-log.md#変換の例-1--ノードpm01の-ha-log)
+  - ha-log ([こちらのページを参照](doc/ha-log.md#変換の例-1--ノードpm01の-ha-log))
   - pm_logconv.out
     ```
     Apr 24 06:19:55 pm01   error: Resource prmPg does not work. (rc=7) not running	# リソースの故障検知時のha-log(③)を変換したログ
@@ -91,7 +90,7 @@ Pacemakerのログは出力される量が多く、内容が分かりにくい�
     Apr 24 06:19:59 pm01    info: fail-over succeeded.				#「フェイルオーバ」処理の完了(成功)を示すログ
     ```
 - ノードpm02（非DCノード）のログ ：
-  - ha-log [(こちらのページを参照)](doc/ha-log.md#変換の例-1--ノードpm02の-ha-log)
+  - ha-log ([こちらのページを参照](doc/ha-log.md#変換の例-1--ノードpm02の-ha-log))
   - pm_logconv.out
     ```
     Apr 24 06:19:55 pm02    info: Resource prmEx tries to start.			# リソースの開始処理－開始時のha-log(⑥)と、
@@ -187,7 +186,7 @@ Pacemakerのログは出力される量が多く、内容が分かりにくい�
     * Node pm02:
     ```
 - ノードpm01（DCノード）のログ ：
-  - ha-log [(こちらのページを参照)](doc/ha-log.md#変換の例-2--ノードpm01の-ha-log)
+  - ha-log ([こちらのページを参照](doc/ha-log.md#変換の例-2--ノードpm01の-ha-log))
   - pm_logconv.out
     ```
     Apr 24 06:26:35 pm01   error: Network to 192.168.201.254 is unreachable.				# NW経路故障検知時のha-log(⑩)を変換したログ
@@ -196,7 +195,7 @@ Pacemakerのログは出力される量が多く、内容が分かりにくい�
     Apr 24 06:26:43 pm01   error: Resource prmPg failed to stop. (rc=1) unknown error			# STONITHされたためここまでの出力
     ```
 - ノードpm02（非DCノード）のログ ：
-  - ha-log [(こちらのページを参照)](doc/ha-log.md#変換の例-2--ノードpm02の-ha-log)
+  - ha-log ([こちらのページを参照](doc/ha-log.md#変換の例-2--ノードpm02の-ha-log))
   - pm_logconv.out
     ```
     Apr 24 06:26:34 pm02    info: Attribute "default_ping_set" is updated to "0" at "pm01".			# 属性変更時のha-log(⑪)を変換したログ
@@ -528,7 +527,8 @@ act_rsc = prmEx, prmPg
   # systemctl start pm_logconv
   #
   ```
+## 5. 変換後ログメッセージの一覧
+- 変換後ログメッセージの一覧は [こちらのページ](doc/conv-msg.md#pacemakerログ解析支援ツール変換後ログメッセージ一覧) を参照してください。
 
 ## 関連リンク
 - [Pacemakerリポジトリパッケージ](https://linux-ha.osdn.jp/wp/dl)
-- [pm_logconv-cs変換後ログメッセージ一覧](doc/conv-msg.md)
