@@ -14,6 +14,8 @@ SPEC = $(logconv_NAME).spec
 TARFILE = $(PACKAGE_NAME)-$(VERSION).tar.gz
 EXTRA_DIST = $(logconv_SCRIPTS) $(logconv_CONFIG) $(logconv_DATA) $(SPEC) init logrotate
 
+AUTOMAKE_OPTIONS = foreign
+
 install-data-hook:
 	@$(NORMAL_INSTALL)
 	test -z "$(logconvcfdir)" || $(mkdir_p) "$(DESTDIR)$(logconvcfdir)"
