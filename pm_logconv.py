@@ -30,7 +30,7 @@ from errno import ESRCH
 #
 # version number of pm_logconv.
 #
-VERSION = "2.4"
+VERSION = "2.5"
 
 #
 # system's host name.
