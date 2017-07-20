@@ -24,7 +24,7 @@
 | No	| イベント	| Pacemakerログの例	| 変換後<br>ログの<br>priority	| 変換後ログメッセージ	| 意味	|
 | ---	| ---		| ---			| :-:				| ---			| ---	|
 | 23-1	| サービス起動 Corosync				| corosync[31153]: [MAIN  ] Corosync Cluster Engine ('*2.4.2*'): started and ready to provide service.	| info	|Starting Corosync *2.4.2*.	| Corosync *2.4.2* を起動します。	|
-| 23-4	| サービス起動 Pacemaker			| pacemakerd[31160]:  notice: Starting Pacemaker *1.1.16-1.el7*						| info	|Starting Pacemaker *1.1.16*.	| Pacemaker *1.1.16* を起動します。	|
+| 23-4	| サービス起動 Pacemaker			| pacemakerd[31160]:  notice: Starting Pacemaker *1.1.17-1.el7*						| info	|Starting Pacemaker *1.1.17*.	| Pacemaker *1.1.17* を起動します。	|
 
 ## Pacemakerサービス終了時のメッセージ一覧
 | No	| イベント	| Pacemakerログの例	| 変換後<br>ログの<br>priority	| 変換後ログメッセージ	| 意味	|
@@ -50,7 +50,7 @@
 | No	| イベント	| Pacemakerログの例	| 変換後<br>ログの<br>priority	| 変換後ログメッセージ	| 意味	|
 | ---	| ---		| ---			| :-:				| ---			| ---	|
 | 6-1	| ノード状態 離脱				| crmd[1404]:    info: Cluster node *pm01* is now lost (was member)									| warning| Node *pm01* is lost	| ノード*pm01*がクラスタメンバシップから離脱しました。	|
-| 6-2	| ノード状態 参加				| crmd[8623]:    info: *pm01* is now member<br>または<br>crmd[31169]:    info: Cluster node *pm01* is now member (was in unknown state)	| info	| Node *pm01* is member	| ノード*pm01*がクラスタメンバシップに参加しました。	|
+| 6-2	| ノード状態 参加				| crmd[8623]:    info: Cluster node *pm01* is now member<br>または<br>crmd[31169]:    info: Cluster node *pm01* is now member (was in unknown state)	| info	| Node *pm01* is member	| ノード*pm01*がクラスタメンバシップに参加しました。	|
 
 ## DC遷移時のメッセージ一覧
 | No	| イベント	| Pacemakerログの例	| 変換後<br>ログの<br>priority	| 変換後ログメッセージ	| 意味	|
@@ -132,14 +132,14 @@
 ## STONITH実行時のメッセージ一覧
 | No	| イベント	| Pacemakerログの例	| 変換後<br>ログの<br>priority	| 変換後ログメッセージ	| 意味	|
 | ---	| ---		| ---			| :-:				| ---			| ---	|
-| 21-1	| STONITH 開始					| crmd[32598]:  notice: Requesting fencing (*reboot*) of node *pm01*														| info	| Try to STONITH (*reboot*) *pm01*.						| ノード*pm01*に対するSTONITH(*reboot*)処理を開始します。					|
-| 21-2	| STONITH 終了(成功)				| crmd[32598]:  notice: Peer *pm01* was terminated (*reboot*) by *pm02* for *pm02*: OK (ref=*930847f8-9484-4339-a13a-59239a029c2d*) by client crmd.*32598*			| info	| Succeeded to STONITH (*reboot*) *pm01* by *pm02*.				| ノード*pm02*からノード*pm01*に対するSTONITH(*reboot*)処理が成功しました。			|
-| 21-3	| STONITH 終了(エラー)				| crmd[17031]:  notice: Peer *pm02* was not terminated (*reboot*) by *pm01* for *pm01*: *No data available* (ref=*1165e1c6-a647-47c4-844a-ec7375a54ac8*) by client crmd.*17031*	| error	| Failed to STONITH (*reboot*) *pm02* by *pm01*.				| ノード*pm01*からノード*pm02*に対するSTONITH(*reboot*)処理が失敗しました。			|
-| 21-4	| STONITH 終了(複数回エラー)			| crmd[17031]:  notice: Too many failures to fence *pm02* (*11*), giving up													| error	| Too many failures to STONITH *pm02*.						| ノード*pm02*に対するSTONITH処理が複数回失敗しました。						|
-| 21-5	| STONITH デバイス実行開始			| stonith-ng[32594]:    info: Requesting that '*pm02*' perform op '*pm01* *reboot*' with '*prmStonith*' for crmd.*32598* (*48*s)						| info	| Try to execute STONITH device *prmStonith* on *pm02* for *reboot* *pm01*.	| ノード*pm01*に対する*reboot*のため、ノード*pm02*上のSTONITHデバイス*prmStonith*を実行します。	|
-| 21-6	| STONITH デバイス実行終了(成功)		| stonith-ng[32594]:  notice: Call to *prmStonith* for '*pm01* *reboot*' on behalf of crmd.*32598*@*pm02*: OK (0)								| info	| Succeeded to execute STONITH device *prmStonith* for *pm01*.			| ノード*pm01*に対するSTONITHデバイス*prmStonith*の実行が成功しました。				|
-| 21-7	| STONITH デバイス実行(エラー)			| stonith-ng[32594]:  notice: Call to *prmStonith* for '*pm01* *reboot*' on behalf of crmd.*32598*@*pm02*: *No data available* (*-61*)						| warning| Failed to execute STONITH device *prmStonith* for *pm01*.			| ノード*pm01*に対するSTONITHデバイス*prmStonith*の実行が失敗しました。				|
-| 21-8	| STONITH 終了(手動成功)			| crmd[17031]:  notice: Peer *pm02* was terminated (*off*) by a human for *pm01*: OK (ref=*882ab3f0-28a7-4d70-9a2b-8ce9b76a2235*) by client stonith_admin.*5743*		| info	| Succeeded to STONITH (*off*) *pm02* by a human.				| ノード*pm02*に対する手動STONITH(*off*)処理が成功しました。					|
+| 21-1	| STONITH 開始					| crmd[32598]:  notice: Requesting fencing (*reboot*) of node *pm01*									| info	| Try to STONITH (*reboot*) *pm01*.						| ノード*pm01*に対するSTONITH(*reboot*)処理を開始します。					|
+| 21-2	| STONITH 終了(成功)				| crmd[32598]:  notice: Peer *pm01* was terminated (*reboot*) by *pm02* on behalf of crmd.*32598*: OK					| info	| Succeeded to STONITH (*reboot*) *pm01* by *pm02*.				| ノード*pm02*からノード*pm01*に対するSTONITH(*reboot*)処理が成功しました。			|
+| 21-3	| STONITH 終了(エラー)				| crmd[17031]:  notice: Peer *pm02* was not terminated (*reboot*) by *pm01* on behalf of crmd.*17031*: *No data available*		| error	| Failed to STONITH (*reboot*) *pm02* by *pm01*.				| ノード*pm01*からノード*pm02*に対するSTONITH(*reboot*)処理が失敗しました。			|
+| 21-4	| STONITH 終了(複数回エラー)			| crmd[17031]:  warning: Too many failures (*10*) to fence *pm02*, giving up								| error	| Too many failures to STONITH *pm02*.						| ノード*pm02*に対するSTONITH処理が複数回失敗しました。						|
+| 21-5	| STONITH デバイス実行開始			| stonith-ng[32594]:    info: Requesting that '*pm02*' perform op '*pm01* *reboot*' with '*prmStonith*' for crmd.*32598* (*48*s)	| info	| Try to execute STONITH device *prmStonith* on *pm02* for *reboot* *pm01*.	| ノード*pm01*に対する*reboot*のため、ノード*pm02*上のSTONITHデバイス*prmStonith*を実行します。	|
+| 21-6	| STONITH デバイス実行終了(成功)		| stonith-ng[32594]:  notice: Call to *prmStonith* for '*pm01* *reboot*' on behalf of crmd.*32598*@*pm02*: OK (0)			| info	| Succeeded to execute STONITH device *prmStonith* for *pm01*.			| ノード*pm01*に対するSTONITHデバイス*prmStonith*の実行が成功しました。				|
+| 21-7	| STONITH デバイス実行(エラー)			| stonith-ng[32594]:  notice: Call to *prmStonith* for '*pm01* *reboot*' on behalf of crmd.*32598*@*pm02*: *No data available* (*-61*)	| warning| Failed to execute STONITH device *prmStonith* for *pm01*.			| ノード*pm01*に対するSTONITHデバイス*prmStonith*の実行が失敗しました。				|
+| 21-8	| STONITH 終了(手動成功)			| crmd[17031]:  notice: Peer *pm02* was terminated (*off*) by a human on behalf of stonith_admin.*5743*: OK				| info	| Succeeded to STONITH (*off*) *pm02* by a human.				| ノード*pm02*に対する手動STONITH(*off*)処理が成功しました。					|
 
 ## フェイルオーバの開始を表すメッセージ一覧
 | No	| イベント	| Pacemakerログの例	| 変換後<br>ログの<br>priority	| 変換後ログメッセージ	| 意味	|
