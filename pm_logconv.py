@@ -958,6 +958,7 @@ class LogconvFrame:
 class LogConvert:
 	PIDFILE = "/var/run/pm_logconv.pid"
 	STATFILE = "/var/run/pm_logconv.stat"
+	REREAD_MAX_ATTEMPTS = 30
 
 	def __init__(self):
 		self.daemonize = False
@@ -1401,9 +1402,23 @@ class LogConvert:
 					return 0
 				return 1
 			cstat.ino = os.fstat(logfile.fileno()).st_ino
+			readcnt = 0
 
 			while 1:
 				logline = logfile.readline()
+
+				if logline and not logline.endswith("\n"):
+					pm_log.debug("convert: there is no line feed (%d)[%s]" %
+						(cstat.offset,logline))
+					readcnt += 1
+					if readcnt > self.REREAD_MAX_ATTEMPTS:
+						pm_log.warn("convert: there is no line feed [%s]" % logline)
+					else:
+						logfile.seek(cstat.offset)
+						time.sleep(1)
+						continue
+				readcnt = 0
+
 				cstat.offset = logfile.tell()
 
 				if not logline:
