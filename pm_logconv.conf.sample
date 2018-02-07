@@ -6,6 +6,7 @@
 #ha_log_path = /var/log/ha-log
 #output_path = /var/log/pm_logconv.out
 #output_logfacility = local2
+#output_async_write = False
 #syslogformat = True
 #attribute_ping = not_defined default_ping_set or default_ping_set lt 100
 #attribute_diskd = not_defined diskcheck_status or diskcheck_status eq ERROR
