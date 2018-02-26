@@ -2826,8 +2826,8 @@ class LogConvertFuncs:
 	def add_rsc_start(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			nodename = self.trimmark(wordlist[-1])
-			rscid = wordlist[1]
+			nodename = wordlist[4]
+			rscid = wordlist[2]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(nodename, rscid):
@@ -2856,7 +2856,7 @@ class LogConvertFuncs:
 	def add_rsc_stop(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid = wordlist[1]
+			rscid = wordlist[2]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid):
@@ -2904,11 +2904,16 @@ class LogConvertFuncs:
 	def add_no_action(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			rscid = wordlist[1]
-			status = self.trimmark(wordlist[2])
-			node = ""
-			if len(wordlist) >= 4:
-				node = self.trimmark(wordlist[3])
+			if wordlist[0] == "Leave":
+				rscid = wordlist[1]
+				status = self.trimmark(wordlist[2])
+				node = ""
+				if len(wordlist) >= 4:
+					node = self.trimmark(wordlist[3])
+			else:
+				rscid = wordlist[2]
+				status = "Started"
+				node = wordlist[4]
 		except:
 			return CONV_PARSE_ERROR
 		if self.is_empty(rscid, status):
@@ -2947,9 +2952,9 @@ class LogConvertFuncs:
 	def add_rsc_move(self, outputobj, logelm, lconvfrm):
 		try:
 			wordlist = logelm.halogmsg.split()
-			a_nodename = self.trimmark(wordlist[-1])
-			f_nodename = self.trimmark(wordlist[-3])
-			rscid = wordlist[1]
+			a_nodename = wordlist[6]
+			f_nodename = wordlist[4]
+			rscid = wordlist[2]
 		except:
 			return CONV_PARSE_ERROR
 
