@@ -155,17 +155,17 @@
 ## フェイルオーバ中のリソース状態を表すメッセージ一覧
 | No	| イベント	| Pacemakerログの例	| 変換後<br>ログの<br>priority	| 変換後ログメッセージ	| 意味	|
 | ---	| ---		| ---			| :-:				| ---			| ---	|
-| F11-1	| リソース 開始					| pengine[32597]:  notice: Start   *prmResource*#011(*pm02*)			| info	| Resource *prmResource* : Started on *pm02*		| *prmResource*はノード*pm02*で稼働中です。			|
-| F11-2	| リソース 停止					| pengine[25227]:  notice: Stop    *prmResource*#011(*pm01*)			| error	| Resource *prmResource* : Stopped			| *prmResource*は停止しています。				|
+| F11-1	| リソース 開始					| pengine[32597]:  notice:  * Start      *prmResource*     ( *pm02* )		| info	| Resource *prmResource* : Started on *pm02*		| *prmResource*はノード*pm02*で稼働中です。			|
+| F11-2	| リソース 停止					| pengine[25227]:  notice:  * Stop       *prmResource*     (                   *pm01* )   due to node availability	| error	| Resource *prmResource* : Stopped			| *prmResource*は停止しています。				|
 | F11-3	| リソース 開始(配置移動なし)			| pengine[32597]:    info: Leave   *prmResource*#011(Started *pm02*)		| info	| Resource *prmResource* : Started on *pm02*		| *prmResource*はノード*pm02*で稼働中です。			|
 | F11-9	| リソース 停止(配置移動なし)			| pengine[21836]:    info: Leave   *prmResource*#011(Stopped)			| error	| Resource *prmResource* : Stopped			| *prmResource*は停止しています。				|
 | F11-5	| リソース Unmanaged				| pengine[4287]:    info: Leave   *prmResource*#011(Started unmanaged)		| error	| Unmanaged resource exists.				| Pacemakerが管理していない(Unmanaged)リソースがあります。	|
-| F11-6	| リソース Move					| pengine[4287]:  notice: Move    *prmResource*#011(Started *pm01* -> *pm02*)	| info	| Resource *prmResource* : Move *pm01* -> *pm02*	| *prmResource*はノード*pm01*からノード*pm02*に移動します。	|
-| F11-8	| リソース Restart(配置移動なし)		| pengine[25733]:  notice: Restart *prmResource*#011(Started *pm01*)		| info	| Resource *prmResource* : Started on *pm01*		| *prmResource*はノード*pm01*で稼働中です。			|
-| F11-11| リソース Recover(配置移動なし)		| pengine[6419]:  notice: Recover *prmResource*#011(Started *pm01*)		| info	| Resource *prmResource* : Started on *pm01*		| *prmResource*はノード*pm01*で稼働中です。			|
-| F11-12| リソース Reload(配置移動なし)			| pengine[30988]:   notice: Reload *prmResource*#011(Started *pm01*)		| info	| Resource *prmResource* : Started on *pm01*		| *prmResource*はノード*pm01*で稼働中です。			|
-| F11-13| リソース Recover				| pengine[6419]:  notice: Recover *prmResource*#011(Started *pm01* -> *pm02*)	| info	| Resource *prmResource* : Move *pm01* -> *pm02*	| *prmResource*はノード*pm01*からノード*pm02*に移動します。	|
-| F11-14| リソース Migrate				| pengine[6690]:  notice: Migrate *prmResource*#011(Started *pm01* -> *pm02*)	| info	| Resource *prmResource* : Move *pm01* -> *pm02*	| *prmResource*はノード*pm01*からノード*pm02*に移動します。	|
+| F11-6	| リソース Move					| pengine[4287]:  notice:  * Move       *prmResource*     (       *pm01* -> *pm02* )	| info	| Resource *prmResource* : Move *pm01* -> *pm02*	| *prmResource*はノード*pm01*からノード*pm02*に移動します。	|
+| F11-8	| リソース Restart(配置移動なし)		| pengine[25733]:  notice:  * Restart    *prmResource2*         (                   *pm01* )   due to required *prmResource1* start		| info	| Resource *prmResource* : Started on *pm01*		| *prmResource2*はノード*pm01*で稼働中です。			|
+| F11-11| リソース Recover(配置移動なし)		| pengine[6419]:  notice:  * Recover    *prmResource*              (                   *pm01* )		| info	| Resource *prmResource* : Started on *pm01*		| *prmResource*はノード*pm01*で稼働中です。			|
+| F11-12| リソース Reload(配置移動なし)			| pengine[30988]:   notice:  * Reload     *prmResource*              (             *pm01* )		| info	| Resource *prmResource* : Started on *pm01*		| *prmResource*はノード*pm01*で稼働中です。			|
+| F11-13| リソース Recover				| pengine[6419]:  notice:  * Recover    *prmResource*     (       *pm01* -> *pm02* )	| info	| Resource *prmResource* : Move *pm01* -> *pm02*	| *prmResource*はノード*pm01*からノード*pm02*に移動します。	|
+| F11-14| リソース Migrate				| pengine[6690]:  notice:  * Migrate    *prmResource*              (       *pm01* -> *pm02* )	| info	| Resource *prmResource* : Move *pm01* -> *pm02*	| *prmResource*はノード*pm01*からノード*pm02*に移動します。	|
 
 ***
 [Pacemakerログ解析支援ツール（pm_logconv-cs）](../README.md)
